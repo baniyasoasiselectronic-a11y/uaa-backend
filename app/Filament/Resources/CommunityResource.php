@@ -45,7 +45,9 @@ class CommunityResource extends Resource
                     ->numeric(),
                 Forms\Components\TextInput::make('longitude')
                     ->numeric(),
-                Forms\Components\TextInput::make('amenities'),
+                Forms\Components\TagsInput::make('amenities')
+                    ->placeholder('Add and press Enter, e.g. Swimming Pool, Gym, Covered Parking, 24/7 Security')
+                    ->helperText('Shown as a features/amenities checklist on every building in this community.'),
                 Forms\Components\Toggle::make('is_featured')
                     ->required(),
                 Forms\Components\TextInput::make('sort_order')
