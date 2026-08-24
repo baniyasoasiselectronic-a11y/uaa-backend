@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
         $this->seedAmenities();
         $this->seedCommunities();
         $this->seedNewsCategories();
+        $this->call(RealDataSeeder::class);
+        $this->call(BlogSeeder::class);
     }
 
     private function seedRoles(): void
@@ -83,10 +85,15 @@ class DatabaseSeeder extends Seeder
 
     private function seedCommunities(): void
     {
+        // Real Dubai districts/cities UAA operates in.
         $communities = [
-            ['name' => 'Akasya East', 'tagline' => 'Modern living in the heart of Warsan', 'location' => 'Warsan, Dubai', 'is_featured' => true],
-            ['name' => 'Akasya West', 'tagline' => 'Contemporary comfort and connectivity', 'location' => 'Warsan, Dubai', 'is_featured' => true],
+            ['name' => 'Al Garhoud', 'tagline' => 'Connected, central and green', 'location' => 'Al Garhoud, Dubai', 'is_featured' => true, 'amenities' => ['Centrally Air-Conditioned', 'Swimming Pool', 'Gym', 'Sauna & Steam Room', 'Covered Parking', '24/7 Security', 'Balcony']],
             ['name' => 'Warsan', 'tagline' => 'A vibrant, family-friendly community', 'location' => 'Warsan, Dubai', 'is_featured' => true],
+            ['name' => 'Deira & Hor Al Anz', 'tagline' => "The heart of old Dubai", 'location' => 'Deira, Dubai', 'is_featured' => true],
+            ['name' => 'Al Warqa', 'tagline' => 'Spacious villa living', 'location' => 'Al Warqa, Dubai', 'is_featured' => false],
+            ['name' => 'Al Barsha', 'tagline' => 'Central and well-connected', 'location' => 'Al Barsha, Dubai', 'is_featured' => false],
+            ['name' => 'Al Jaddaf', 'tagline' => 'Waterfront and rising fast', 'location' => 'Al Jaddaf, Dubai', 'is_featured' => false],
+            ['name' => 'Dubai Silicon Oasis', 'tagline' => 'A self-contained residential and tech community', 'location' => 'Dubai Silicon Oasis, Dubai', 'is_featured' => false],
         ];
 
         foreach ($communities as $i => $community) {
