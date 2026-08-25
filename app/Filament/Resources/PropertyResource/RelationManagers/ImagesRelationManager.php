@@ -19,18 +19,24 @@ class ImagesRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\FileUpload::make('path')
-                    ->label('Image')
+                    ->label('Image(s)')
+                    ->helperText('Select multiple photos at once — each becomes its own gallery image.')
                     ->image()
+                    ->multiple()
+                    ->reorderable()
+                    ->appendFiles()
+                    ->maxFiles(20)
+                    ->imagePreviewHeight('120')
                     ->directory('property-images')
                     ->required(),
                 Forms\Components\TextInput::make('alt')
                     ->label('Alt text')
+                    ->helperText('Applied to every image uploaded above.')
                     ->maxLength(255),
                 Forms\Components\Toggle::make('is_main')
-                    ->label('Main image'),
-                Forms\Components\TextInput::make('sort_order')
-                    ->numeric()
-                    ->default(0),
+                    ->label('Set as main image')
+                    ->helperText('Only applies to the first image if you uploaded several.'),
+                Forms\Components\TextInput::make('sort_order')->numeric()->default(0)->helperText('Starting order for the first image; extra images are numbered after it.'),
             ]);
     }
 
@@ -47,7 +53,26 @@ class ImagesRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('sort_order')->sortable()->label('Order'),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                Tables\Actions\CreateAction::make()
+                    ->label('New image(s)')
+                    ->modalHeading('Add image(s)')
+                    ->using(function (array $data, RelationManager $livewire) {
+                        $owner = $livewire->getOwnerRecord();
+                        $paths = array_values((array) ($data['path'] ?? []));
+                        $baseOrder = (int) ($data['sort_order'] ?? 0);
+
+                        $record = null;
+                        foreach ($paths as $i => $path) {
+                            $record = $owner->images()->create([
+                                'path' => $path,
+                                'alt' => $data['alt'] ?? null,
+                                'is_main' => $i === 0 && (bool) ($data['is_main'] ?? false),
+                                'sort_order' => $baseOrder + $i,
+                            ]);
+                        }
+
+                        return $record;
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
