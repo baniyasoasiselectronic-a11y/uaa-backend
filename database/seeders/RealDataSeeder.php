@@ -39,6 +39,14 @@ class RealDataSeeder extends Seeder
             ['Al Warqa Blue', 'al-warqa', 6, 'Modern apartments in the family district of Al Warqa.', 51667],
             ['Barsha Oasis', 'al-barsha', 9, 'Contemporary studio apartments in Al Barsha, close to Mall of the Emirates and Sheikh Zayed Road.', 55000],
             ['Al Fahidi Building', 'deira-hor-al-anz', 4, 'Heritage-area building in historic Bur Dubai / Al Fahidi.', null],
+            // The following four are real UAA buildings (confirmed via uaa.ae) added after the
+            // initial batch. uaa.ae's own pages for them don't state floors/year/amenities, so
+            // those are left null rather than invented; average_price is each page's real
+            // "Starting From" rent.
+            ['Al Ashrafia', 'deira-hor-al-anz', null, 'A residential building in Deira, offering apartments to let through United Arab Agencies.', 50000],
+            ['Al Maktoum', 'deira-hor-al-anz', null, 'A residential building in Deira, offering apartments to let through United Arab Agencies.', 50000],
+            ['Al Ras Centre', 'deira-hor-al-anz', null, "A residential building in Al Ras, Deira — one of Dubai's oldest trading districts, near the Gold Souk and Dubai Creek.", 50000],
+            ['Clock Plaza', 'deira-hor-al-anz', null, 'A residential building in Deira, offering apartments to let through United Arab Agencies.', 70000],
         ];
 
         // The old placeholder name/slug — rename in place if it still exists so we don't leave a duplicate.
