@@ -28,7 +28,7 @@ class RealDataSeeder extends Seeder
         // name, city slug, floors, description, real average rent (from live UAA Bayut listings; null = no verified data, keep illustrative average)
         $buildings = [
             ['Dana Al Garhoud', 'al-garhoud', 12, 'A landmark residential tower in the heart of Al Garhoud, offering furnished studios to two-bedroom apartments moments from Dubai Airport and the Metro. A consistently in-demand address on the open rental market.', 69286],
-            ['Warsan Akasya', 'warsan', 8, 'Modern family apartments in the Akasya community, International City Phase 2 (Warsan 4). Residences feature a spacious layout, big balconies, open modern kitchens, built-in wardrobes and quality kitchen appliances, in a well-maintained building.', 58500],
+            ['Warsan Akasya', 'warsan', 8, 'Modern family apartments in the Akasya community, International City Phase 2 (Warsan 4). Residences feature a spacious layout, big balconies, open modern kitchens, built-in wardrobes, quality kitchen appliances and deluxe finishing, in a well-maintained building with a secure intercom system, lobby and high-speed elevators. Conveniently located with easy access to Dubai Academic City, Dubai International Airport, Dragon Mart and Mirdif City Centre.', 58500],
             ['Akasya North', 'warsan', 8, 'Contemporary apartments on the north side of the Akasya community, International City Phase 2 (Warsan 4).', 52000],
             ['Akasya South', 'warsan', 8, 'Bright, well-connected apartments in southern Akasya, International City Phase 2 (Warsan 4).', 60000],
             ['Mamzar Centre', 'deira-hor-al-anz', 6, 'Mixed-use building in Hor Al Anz — also home to the UAA head office.', 79750],
@@ -47,18 +47,25 @@ class RealDataSeeder extends Seeder
         }
 
         foreach ($buildings as [$name, $citySlug, $floors, $desc, $realAvg]) {
-            $building = Building::updateOrCreate(
-                ['slug' => Str::slug($name)],
-                [
-                    'name' => $name,
-                    'community_id' => $cities[$citySlug] ?? null,
-                    'floors_count' => $floors,
-                    'description' => $desc,
-                ],
-            );
+            $slug = Str::slug($name);
 
-            // A few illustrative units per building.
-            $building->units()->delete();
+            // IMPORTANT: this seeder only ever CREATES a building the first time.
+            // It must never touch a building that already exists — admin-managed
+            // content (uploaded photos, edited descriptions, custom prices) must
+            // never be reset by re-running `db:seed`.
+            if (Building::where('slug', $slug)->exists()) {
+                continue;
+            }
+
+            $building = Building::create([
+                'name' => $name,
+                'slug' => $slug,
+                'community_id' => $cities[$citySlug] ?? null,
+                'floors_count' => $floors,
+                'description' => $desc,
+            ]);
+
+            // A few illustrative units, used only to compute a starting average price.
             $configs = [
                 ['A-101', 1, 1, 720, 55000, 'available'],
                 ['A-204', 2, 2, 1150, 95000, 'available'],
@@ -84,7 +91,6 @@ class RealDataSeeder extends Seeder
                 'average_price' => $realAvg ?? round(array_sum($prices) / max(count($prices), 1)),
                 'main_image' => $gallery[0],
             ]);
-            $building->images()->delete();
             foreach (array_slice($gallery, 0, 4) as $gi => $g) {
                 $building->images()->create(['path' => $g, 'sort_order' => $gi]);
             }
@@ -130,36 +136,40 @@ class RealDataSeeder extends Seeder
 
     private function makeProperty($cities, $types, array $amenityIds, string $title, string $citySlug, string $typeSlug, string $purpose, string $status, $price, $bd, $ba, $area, bool $featured, int $ref): void
     {
-        $property = Property::updateOrCreate(
-            ['slug' => Str::slug($title)],
-            [
-                'title' => $title,
-                'reference_code' => 'UAA-'.$ref,
-                'property_type_id' => $types[$typeSlug] ?? null,
-                'community_id' => $cities[$citySlug] ?? null,
-                'purpose' => $purpose,
-                'status' => $status,
-                'description' => 'A quality '.$typeSlug.' offered by United Arab Agencies in '.ucfirst(str_replace('-', ' ', $citySlug)).', Dubai. Contact our team to arrange a viewing.',
-                'price' => $price,
-                'currency' => 'AED',
-                'bedrooms' => $bd,
-                'bathrooms' => $ba,
-                'area_sqft' => $area,
-                'address' => ucfirst(str_replace('-', ' ', $citySlug)).', Dubai',
-                'is_featured' => $featured,
-                'is_published' => true,
-                'published_at' => now(),
-            ],
-        );
+        $slug = Str::slug($title);
+
+        // Same rule as buildings: only ever create once. Never reset admin-managed
+        // content (photos, descriptions, prices) on a re-seed.
+        if (Property::where('slug', $slug)->exists()) {
+            return;
+        }
+
+        $property = Property::create([
+            'title' => $title,
+            'slug' => $slug,
+            'reference_code' => 'UAA-'.$ref,
+            'property_type_id' => $types[$typeSlug] ?? null,
+            'community_id' => $cities[$citySlug] ?? null,
+            'purpose' => $purpose,
+            'status' => $status,
+            'description' => 'A quality '.$typeSlug.' offered by United Arab Agencies in '.ucfirst(str_replace('-', ' ', $citySlug)).', Dubai. Contact our team to arrange a viewing.',
+            'price' => $price,
+            'currency' => 'AED',
+            'bedrooms' => $bd,
+            'bathrooms' => $ba,
+            'area_sqft' => $area,
+            'address' => ucfirst(str_replace('-', ' ', $citySlug)).', Dubai',
+            'is_featured' => $featured,
+            'is_published' => true,
+            'published_at' => now(),
+        ]);
 
         $property->amenities()->sync(collect($amenityIds)->shuffle()->take(6)->all());
 
-        $property->features()->delete();
         foreach (['Built-in Wardrobes', 'Fitted Kitchen', 'Covered Parking', '24/7 Security'] as $f) {
             $property->features()->create(['name' => $f]);
         }
 
-        $property->units()->delete();
         for ($u = 1; $u <= 2; $u++) {
             $property->units()->create([
                 'unit_number' => sprintf('%02d-%02d', ($ref % 100), $u),
@@ -175,7 +185,6 @@ class RealDataSeeder extends Seeder
         if (in_array($status, ['off_plan', 'coming_soon'], true)) {
             $gallery = $this->gallery();
             $property->update(['main_image' => $gallery[0]]);
-            $property->images()->delete();
             foreach (array_slice($gallery, 0, 3) as $gi => $g) {
                 $property->images()->create(['path' => $g, 'is_main' => $gi === 0, 'sort_order' => $gi]);
             }
