@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PropertyResource\RelationManagers;
 use App\Filament\Resources\UpcomingProjectResource\Pages;
 use App\Models\Property;
+use App\Support\OptimizesUploadedImages;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -66,10 +67,12 @@ class UpcomingProjectResource extends Resource
                     ->numeric()
                     ->prefix('AED')
                     ->label('Starting price'),
-                Forms\Components\FileUpload::make('main_image')
-                    ->label('Main image')
-                    ->image()
-                    ->directory('property-images'),
+                OptimizesUploadedImages::apply(
+                    Forms\Components\FileUpload::make('main_image')
+                        ->label('Main image')
+                        ->image()
+                        ->directory('property-images')
+                ),
                 Forms\Components\Toggle::make('is_featured')
                     ->label('Featured'),
                 Forms\Components\Toggle::make('is_published')

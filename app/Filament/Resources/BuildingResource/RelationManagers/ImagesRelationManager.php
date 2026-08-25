@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\BuildingResource\RelationManagers;
 
+use App\Support\OptimizesUploadedImages;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -17,17 +18,19 @@ class ImagesRelationManager extends RelationManager
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\FileUpload::make('path')
-                ->label('Image(s)')
-                ->helperText('Select multiple photos at once — each becomes its own gallery image.')
-                ->image()
-                ->multiple()
-                ->reorderable()
-                ->appendFiles()
-                ->maxFiles(20)
-                ->imagePreviewHeight('120')
-                ->directory('building-images')
-                ->required(),
+            OptimizesUploadedImages::apply(
+                Forms\Components\FileUpload::make('path')
+                    ->label('Image(s)')
+                    ->helperText('Select multiple photos at once — each becomes its own gallery image.')
+                    ->image()
+                    ->multiple()
+                    ->reorderable()
+                    ->appendFiles()
+                    ->maxFiles(20)
+                    ->imagePreviewHeight('120')
+                    ->directory('building-images')
+                    ->required()
+            ),
             Forms\Components\TextInput::make('alt')
                 ->label('Alt text')
                 ->helperText('Applied to every image uploaded above (edit a single image later to customise it).')

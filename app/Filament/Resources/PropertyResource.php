@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PropertyResource\Pages;
 use App\Filament\Resources\PropertyResource\RelationManagers;
 use App\Models\Property;
+use App\Support\OptimizesUploadedImages;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -77,8 +78,11 @@ class PropertyResource extends Resource
                     ->numeric(),
                 Forms\Components\TextInput::make('longitude')
                     ->numeric(),
-                Forms\Components\FileUpload::make('main_image')
-                    ->image(),
+                OptimizesUploadedImages::apply(
+                    Forms\Components\FileUpload::make('main_image')
+                        ->image()
+                        ->directory('property-images')
+                ),
                 Forms\Components\TextInput::make('video_url')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('virtual_tour_url')
