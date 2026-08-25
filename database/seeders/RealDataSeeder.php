@@ -28,7 +28,7 @@ class RealDataSeeder extends Seeder
         // name, city slug, floors, description, real average rent (from live UAA Bayut listings; null = no verified data, keep illustrative average)
         $buildings = [
             ['Dana Al Garhoud', 'al-garhoud', 12, 'A landmark residential tower in the heart of Al Garhoud, offering furnished studios to two-bedroom apartments moments from Dubai Airport and the Metro. A consistently in-demand address on the open rental market.', 69286],
-            ['Warsan Akasya', 'warsan', 8, 'Modern family apartments in the Akasya community, International City Phase 2 (Warsan 4).', 58500],
+            ['Warsan Akasya', 'warsan', 8, 'Modern family apartments in the Akasya community, International City Phase 2 (Warsan 4). Residences feature a spacious layout, big balconies, open modern kitchens, built-in wardrobes and quality kitchen appliances, in a well-maintained building.', 58500],
             ['Akasya North', 'warsan', 8, 'Contemporary apartments on the north side of the Akasya community, International City Phase 2 (Warsan 4).', 52000],
             ['Akasya South', 'warsan', 8, 'Bright, well-connected apartments in southern Akasya, International City Phase 2 (Warsan 4).', 60000],
             ['Mamzar Centre', 'deira-hor-al-anz', 6, 'Mixed-use building in Hor Al Anz — also home to the UAA head office.', 79750],
