@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Account\AccountController;
 use App\Http\Controllers\Api\Account\FavoriteController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\BuildingController;
 use App\Http\Controllers\Api\CallbackController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\CommunityController;
@@ -29,6 +30,9 @@ Route::get('properties/{slug}', [PropertyController::class, 'show'])->name('prop
 Route::get('communities', [CommunityController::class, 'index'])->name('communities.index');
 Route::get('communities/{slug}', [CommunityController::class, 'show'])->name('communities.show');
 
+Route::get('buildings', [BuildingController::class, 'index'])->name('buildings.index');
+Route::get('buildings/{slug}', [BuildingController::class, 'show'])->name('buildings.show');
+
 Route::get('neighborhoods', [NeighborhoodController::class, 'index'])->name('neighborhoods.index');
 Route::get('neighborhoods/{slug}', [NeighborhoodController::class, 'show'])->name('neighborhoods.show');
 
@@ -41,6 +45,7 @@ Route::get('open-houses/{slug}', [OpenHouseController::class, 'show'])->name('op
 Route::get('careers', [CareerController::class, 'index'])->name('careers.index');
 Route::get('careers/{slug}', [CareerController::class, 'show'])->name('careers.show');
 
+Route::get('reviews', [\App\Http\Controllers\Api\ReviewController::class, 'index'])->name('reviews.index');
 Route::get('property-types', [LookupController::class, 'propertyTypes'])->name('property-types.index');
 Route::get('amenities', [LookupController::class, 'amenities'])->name('amenities.index');
 
@@ -57,6 +62,8 @@ Route::middleware('throttle:20,1')->group(function () {
     Route::post('list-with-us-requests', [ListWithUsController::class, 'store'])->name('list-with-us.store');
     Route::post('open-houses/{openHouse}/register', [OpenHouseController::class, 'register'])->name('open-houses.register');
     Route::post('careers/{career}/apply', [CareerController::class, 'apply'])->name('careers.apply');
+    Route::post('job-applications', [\App\Http\Controllers\Api\JobApplicationController::class, 'store'])->name('job-applications.store');
+    Route::post('call-leads', [\App\Http\Controllers\Api\CallLeadController::class, 'store'])->name('call-leads.store');
 });
 
 /*
