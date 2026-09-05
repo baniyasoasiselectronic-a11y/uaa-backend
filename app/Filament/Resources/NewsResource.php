@@ -23,6 +23,12 @@ class NewsResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $navigationLabel = 'Blogs';
+
+    protected static ?string $modelLabel = 'Blog';
+
+    protected static ?string $pluralModelLabel = 'Blogs';
+
     public static function form(Form $form): Form
     {
         return $form

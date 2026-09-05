@@ -29,6 +29,11 @@ class PropertyController extends Controller
             $query->where('status', $status);
         }
 
+        // Upcoming / off-plan projects
+        if ($request->boolean('upcoming')) {
+            $query->whereIn('status', ['off_plan', 'coming_soon']);
+        }
+
         // Property type by slug or id
         if ($type = $request->query('type')) {
             $query->whereHas('propertyType', function ($q) use ($type) {

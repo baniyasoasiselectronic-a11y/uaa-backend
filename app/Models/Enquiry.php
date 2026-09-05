@@ -20,6 +20,11 @@ class Enquiry extends Model
         return $this->belongsTo(Unit::class);
     }
 
+    public function building(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
+    }
+
     public function lead(): HasOne
     {
         return $this->hasOne(Lead::class);

@@ -10,6 +10,15 @@ class Building extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'average_price' => 'decimal:2',
+    ];
+
+    public function images(): HasMany
+    {
+        return $this->hasMany(BuildingImage::class);
+    }
+
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);

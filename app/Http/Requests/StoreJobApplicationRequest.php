@@ -17,6 +17,7 @@ class StoreJobApplicationRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'career_id' => ['nullable', 'integer', 'exists:careers,id'],
             'position' => ['nullable', 'string', 'max:255'],
             'cover_letter' => ['nullable', 'string', 'max:5000'],
             'cv' => ['required', 'file', 'max:10240', 'mimes:pdf,doc,docx'],

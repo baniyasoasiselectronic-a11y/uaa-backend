@@ -23,6 +23,7 @@ class CommunityResource extends JsonResource
             'amenities' => $this->amenities,
             'is_featured' => (bool) $this->is_featured,
             'properties_count' => $this->whenCounted('properties'),
+            'buildings' => BuildingResource::collection($this->whenLoaded('buildings')),
             'neighborhoods' => NeighborhoodResource::collection($this->whenLoaded('neighborhoods')),
         ];
     }

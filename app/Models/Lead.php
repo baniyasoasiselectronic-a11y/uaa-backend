@@ -28,6 +28,11 @@ class Lead extends Model
         return $this->belongsTo(Unit::class);
     }
 
+    public function building(): BelongsTo
+    {
+        return $this->belongsTo(Building::class);
+    }
+
     public function agent(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');

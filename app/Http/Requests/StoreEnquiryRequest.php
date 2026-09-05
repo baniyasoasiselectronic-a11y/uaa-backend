@@ -19,6 +19,7 @@ class StoreEnquiryRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'property_id' => ['nullable', 'integer', 'exists:properties,id'],
             'unit_id' => ['nullable', 'integer', 'exists:units,id'],
+            'building_id' => ['nullable', 'integer', 'exists:buildings,id'],
             'preferred_unit' => ['nullable', 'string', 'max:255'],
             'message' => ['nullable', 'string', 'max:5000'],
         ];

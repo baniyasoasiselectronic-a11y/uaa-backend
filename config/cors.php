@@ -16,11 +16,10 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => array_filter([
-        env('FRONTEND_URL', 'http://localhost:3000'),
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-    ]),
+    // Public content + rate-limited public forms are read by the static site
+    // (browser, cross-origin). Token (Bearer) auth needs no cookies, so a
+    // wildcard origin is safe here. Lock this down later if desired.
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
@@ -30,6 +29,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];

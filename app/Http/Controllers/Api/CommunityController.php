@@ -24,7 +24,7 @@ class CommunityController extends Controller
         $community = Community::query()
             ->where('slug', $slug)
             ->withCount('properties')
-            ->with('neighborhoods')
+            ->with(['neighborhoods', 'buildings' => fn ($q) => $q->withCount('units')->orderBy('name')])
             ->firstOrFail();
 
         return new CommunityResource($community);

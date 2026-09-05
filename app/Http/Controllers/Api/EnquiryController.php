@@ -19,6 +19,7 @@ class EnquiryController extends Controller
             'phone' => $enquiry->phone,
             'property_id' => $enquiry->property_id,
             'unit_id' => $enquiry->unit_id,
+            'building_id' => $enquiry->building_id,
             'stage' => 'new',
         ]);
 
