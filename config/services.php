@@ -40,4 +40,10 @@ return [
         'place_id' => env('GOOGLE_PLACE_ID'),
     ],
 
+    // Where new complaint-form submissions get emailed (mirrors the old
+    // uaa.ae WordPress site's "complaints@uaa.ae" WP Mail SMTP setup).
+    'complaints' => [
+        'notify_email' => env('COMPLAINTS_NOTIFY_EMAIL', 'complaints@uaa.ae'),
+    ],
+
 ];
