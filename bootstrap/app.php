@@ -13,7 +13,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Railway (and most PaaS hosts) terminate TLS at their edge proxy and
+        // forward to this app over plain HTTP internally, setting
+        // X-Forwarded-Proto: https. Without trusting that header, Laravel
+        // thinks every request is insecure — Filament/asset() then generate
+        // http:// URLs on an https:// page, which browsers block as mixed
+        // content (this is exactly what broke the admin panel's styling).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
