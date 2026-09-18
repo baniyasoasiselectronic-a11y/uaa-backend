@@ -53,6 +53,6 @@ class BuildingResource extends JsonResource
 
     private function url(string $path): string
     {
-        return Str::startsWith($path, ['http://', 'https://']) ? $path : Storage::url($path);
+        return Str::startsWith($path, ['http://', 'https://', '/']) ? $path : Storage::url($path);
     }
 }

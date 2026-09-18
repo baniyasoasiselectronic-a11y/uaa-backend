@@ -16,7 +16,7 @@ class NewsResource extends JsonResource
             'slug' => $this->slug,
             'excerpt' => $this->excerpt,
             'body' => $this->when($request->routeIs('*.show'), $this->body),
-            'cover_image' => $this->cover_image ? Storage::url($this->cover_image) : null,
+            'cover_image' => $this->cover_image ? (str_starts_with($this->cover_image, '/') || str_starts_with($this->cover_image, 'http') ? $this->cover_image : Storage::url($this->cover_image)) : null,
             'published_at' => $this->published_at,
             'category' => $this->whenLoaded('category', fn () => $this->category ? [
                 'id' => $this->category->id,

@@ -107,7 +107,12 @@ class RealDataSeeder extends Seeder
 
     private function gallery(): array
     {
-        return ['gallery/arch.webp', 'gallery/dubai-frame.webp', 'gallery/palm.webp', 'gallery/reception.webp'];
+        // Root-relative paths into public/gallery/ (committed static assets,
+        // not the storage disk) — these are the fallback photos shown until
+        // an admin uploads real ones for a building. Using / here (not the
+        // storage:// disk) means they always exist on every fresh deploy,
+        // with no dependency on persistent/volume storage.
+        return ['/gallery/arch.webp', '/gallery/dubai-frame.webp', '/gallery/palm.webp', '/gallery/reception.webp'];
     }
 
     private function seedProperties($cities, $types, array $amenityIds): void

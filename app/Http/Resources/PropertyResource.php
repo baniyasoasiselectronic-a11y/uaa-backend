@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class PropertyResource extends JsonResource
 {
@@ -26,10 +27,10 @@ class PropertyResource extends JsonResource
             'address' => $this->address,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'main_image' => $this->main_image ? Storage::url($this->main_image) : null,
+            'main_image' => $this->main_image ? $this->url($this->main_image) : null,
             'video_url' => $this->video_url,
             'virtual_tour_url' => $this->virtual_tour_url,
-            'floor_plan' => $this->floor_plan ? Storage::url($this->floor_plan) : null,
+            'floor_plan' => $this->floor_plan ? $this->url($this->floor_plan) : null,
             'is_featured' => (bool) $this->is_featured,
             'views' => $this->views,
             'published_at' => $this->published_at,
@@ -46,14 +47,14 @@ class PropertyResource extends JsonResource
             ]),
             'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($img) => [
                 'id' => $img->id,
-                'url' => Storage::url($img->path),
+                'url' => $this->url($img->path),
                 'alt' => $img->alt,
                 'is_main' => (bool) $img->is_main,
             ])),
             'videos' => $this->whenLoaded('videos', fn () => $this->videos->map(fn ($v) => [
                 'id' => $v->id,
                 'title' => $v->title,
-                'url' => $v->url ?: ($v->path ? Storage::url($v->path) : null),
+                'url' => $v->url ?: ($v->path ? $this->url($v->path) : null),
             ])),
             'features' => $this->whenLoaded('features', fn () => $this->features->map(fn ($f) => [
                 'name' => $f->name,
@@ -65,9 +66,14 @@ class PropertyResource extends JsonResource
                 'title' => $this->seo->title,
                 'meta_description' => $this->seo->meta_description,
                 'canonical_url' => $this->seo->canonical_url,
-                'og_image' => $this->seo->og_image ? Storage::url($this->seo->og_image) : null,
+                'og_image' => $this->seo->og_image ? $this->url($this->seo->og_image) : null,
                 'schema' => $this->seo->schema,
             ] : null),
         ];
+    }
+
+    private function url(string $path): string
+    {
+        return Str::startsWith($path, ['http://', 'https://', '/']) ? $path : Storage::url($path);
     }
 }

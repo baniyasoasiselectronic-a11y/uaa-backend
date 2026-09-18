@@ -16,7 +16,7 @@ class CommunityResource extends JsonResource
             'slug' => $this->slug,
             'tagline' => $this->tagline,
             'description' => $this->description,
-            'hero_image' => $this->hero_image ? Storage::url($this->hero_image) : null,
+            'hero_image' => $this->hero_image ? (str_starts_with($this->hero_image, '/') || str_starts_with($this->hero_image, 'http') ? $this->hero_image : Storage::url($this->hero_image)) : null,
             'location' => $this->location,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,

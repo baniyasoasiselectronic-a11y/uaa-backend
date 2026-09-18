@@ -16,7 +16,7 @@ class NeighborhoodResource extends JsonResource
             'slug' => $this->slug,
             'excerpt' => $this->excerpt,
             'body' => $this->when($request->routeIs('*.show'), $this->body),
-            'hero_image' => $this->hero_image ? Storage::url($this->hero_image) : null,
+            'hero_image' => $this->hero_image ? (str_starts_with($this->hero_image, '/') || str_starts_with($this->hero_image, 'http') ? $this->hero_image : Storage::url($this->hero_image)) : null,
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
             'is_featured' => (bool) $this->is_featured,

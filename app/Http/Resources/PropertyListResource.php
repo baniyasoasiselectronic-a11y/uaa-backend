@@ -23,7 +23,7 @@ class PropertyListResource extends JsonResource
             'bathrooms' => $this->bathrooms,
             'area_sqft' => $this->area_sqft,
             'address' => $this->address,
-            'main_image' => $this->main_image ? Storage::url($this->main_image) : null,
+            'main_image' => $this->main_image ? (str_starts_with($this->main_image, '/') || str_starts_with($this->main_image, 'http') ? $this->main_image : Storage::url($this->main_image)) : null,
             'is_featured' => (bool) $this->is_featured,
             'community' => $this->whenLoaded('community', fn () => [
                 'id' => $this->community->id,
