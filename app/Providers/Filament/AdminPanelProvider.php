@@ -68,11 +68,6 @@ class AdminPanelProvider extends PanelProvider
                         .dark .fi-sidebar-item-active .fi-sidebar-item-label {
                             color: #C9A227;
                         }
-                        .fi-logo {
-                            display: flex;
-                            align-items: center;
-                            gap: .5rem;
-                        }
                     </style>
                     HTML
                 ),
