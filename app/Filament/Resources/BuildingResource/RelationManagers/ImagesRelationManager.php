@@ -5,7 +5,9 @@ namespace App\Filament\Resources\BuildingResource\RelationManagers;
 use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Support\Exceptions\Halt;
 use Filament\Tables;
 use Filament\Tables\Table;
 
@@ -56,8 +58,21 @@ class ImagesRelationManager extends RelationManager
                     ->modalHeading('Add building image(s)')
                     ->using(function (array $data, RelationManager $livewire) {
                         $owner = $livewire->getOwnerRecord();
-                        $paths = array_values((array) ($data['path'] ?? []));
+                        // saveUploadedFileUsing() returns null for any image Cloudinary
+                        // rejected (already surfaces its own notification) — drop those,
+                        // keep whatever did upload successfully.
+                        $paths = array_values(array_filter((array) ($data['path'] ?? [])));
                         $baseOrder = (int) ($data['sort_order'] ?? 0);
+
+                        if (! $paths) {
+                            Notification::make()
+                                ->title('No images were saved')
+                                ->body('Every upload in this batch failed — see the error above.')
+                                ->danger()
+                                ->send();
+
+                            throw new Halt();
+                        }
 
                         $record = null;
                         foreach ($paths as $i => $path) {
