@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PropertyResource\Pages;
 use App\Filament\Resources\PropertyResource\RelationManagers;
 use App\Models\Property;
-use App\Support\OptimizesUploadedImages;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -78,10 +78,10 @@ class PropertyResource extends Resource
                     ->numeric(),
                 Forms\Components\TextInput::make('longitude')
                     ->numeric(),
-                OptimizesUploadedImages::apply(
+                UploadsToCloudinary::apply(
                     Forms\Components\FileUpload::make('main_image')
-                        ->image()
-                        ->directory('property-images')
+                        ->image(),
+                    'property-images'
                 ),
                 Forms\Components\TextInput::make('video_url')
                     ->maxLength(255),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\NewsResource\Pages;
 use App\Filament\Resources\NewsResource\RelationManagers;
 use App\Models\News;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -47,8 +48,11 @@ class NewsResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('body')
                     ->columnSpanFull(),
-                Forms\Components\FileUpload::make('cover_image')
-                    ->image(),
+                UploadsToCloudinary::apply(
+                    Forms\Components\FileUpload::make('cover_image')
+                        ->image(),
+                    'news-images'
+                ),
                 Forms\Components\Toggle::make('is_published')
                     ->required(),
                 Forms\Components\DateTimePicker::make('published_at'),

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\CommunityResource\Pages;
 use App\Filament\Resources\CommunityResource\RelationManagers;
 use App\Models\Community;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -37,8 +38,11 @@ class CommunityResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
-                Forms\Components\FileUpload::make('hero_image')
-                    ->image(),
+                UploadsToCloudinary::apply(
+                    Forms\Components\FileUpload::make('hero_image')
+                        ->image(),
+                    'community-images'
+                ),
                 Forms\Components\TextInput::make('location')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('latitude')

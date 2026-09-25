@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\PropertyResource\RelationManagers;
 
-use App\Support\OptimizesUploadedImages;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -19,7 +19,7 @@ class ImagesRelationManager extends RelationManager
     {
         return $form
             ->schema([
-                OptimizesUploadedImages::apply(
+                UploadsToCloudinary::apply(
                     Forms\Components\FileUpload::make('path')
                         ->label('Image(s)')
                         ->helperText('Select multiple photos at once — each becomes its own gallery image.')
@@ -29,8 +29,8 @@ class ImagesRelationManager extends RelationManager
                         ->appendFiles()
                         ->maxFiles(20)
                         ->imagePreviewHeight('120')
-                        ->directory('property-images')
-                        ->required()
+                        ->required(),
+                    'property-images'
                 ),
                 Forms\Components\TextInput::make('alt')
                     ->label('Alt text')

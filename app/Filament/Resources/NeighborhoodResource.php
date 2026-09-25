@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\NeighborhoodResource\Pages;
 use App\Filament\Resources\NeighborhoodResource\RelationManagers;
 use App\Models\Neighborhood;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -39,8 +40,11 @@ class NeighborhoodResource extends Resource
                     ->maxLength(255),
                 Forms\Components\Textarea::make('body')
                     ->columnSpanFull(),
-                Forms\Components\FileUpload::make('hero_image')
-                    ->image(),
+                UploadsToCloudinary::apply(
+                    Forms\Components\FileUpload::make('hero_image')
+                        ->image(),
+                    'neighborhood-images'
+                ),
                 Forms\Components\TextInput::make('latitude')
                     ->numeric(),
                 Forms\Components\TextInput::make('longitude')

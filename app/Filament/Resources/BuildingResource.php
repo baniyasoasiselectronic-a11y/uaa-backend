@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BuildingResource\Pages;
 use App\Filament\Resources\BuildingResource\RelationManagers;
 use App\Models\Building;
-use App\Support\OptimizesUploadedImages;
+use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -47,11 +47,11 @@ class BuildingResource extends Resource
                     ->numeric()
                     ->prefix('AED')
                     ->helperText('Shown publicly. Leave blank to auto-use the average of the units.'),
-                OptimizesUploadedImages::apply(
+                UploadsToCloudinary::apply(
                     Forms\Components\FileUpload::make('main_image')
                         ->label('Main image')
-                        ->image()
-                        ->directory('building-images')
+                        ->image(),
+                    'building-images'
                 ),
             ]);
     }
