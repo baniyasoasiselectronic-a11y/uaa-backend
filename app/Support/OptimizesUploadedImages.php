@@ -46,51 +46,74 @@ class OptimizesUploadedImages
     {
         try {
             $fullPath = $disk->path($path);
-            if (! is_file($fullPath)) {
+            if (! is_file($fullPath) || filesize($fullPath) === 0) {
                 return;
             }
 
-            $info = @getimagesize($fullPath);
-            if (! $info) {
-                return; // not a recognisable image (e.g. an SVG or PDF) — leave untouched
-            }
-            $mime = $info['mime'] ?? '';
+            // A full-resolution phone photo needs ~(width*height*4) bytes just to
+            // decode as a GD truecolor bitmap — easily 50MB+ for a modern camera
+            // shot, which can exceed a constrained host's default memory_limit and
+            // abort mid-encode. Give this one operation more headroom; restore the
+            // previous limit afterwards regardless of outcome.
+            $previousLimit = ini_set('memory_limit', '512M');
 
-            // Decide the real decoder from the file's actual content, not its
-            // extension — phone/screenshot uploads are sometimes mislabelled.
-            $src = match (true) {
-                str_contains($mime, 'jpeg') => @imagecreatefromjpeg($fullPath),
-                str_contains($mime, 'png') => @imagecreatefrompng($fullPath),
-                str_contains($mime, 'webp') => @imagecreatefromwebp($fullPath),
-                default => null,
-            };
-            if (! $src) {
-                return;
-            }
-
-            $w = imagesx($src);
-            $h = imagesy($src);
-
-            if ($w > $maxWidth) {
-                $newW = $maxWidth;
-                $newH = (int) round($h * ($maxWidth / $w));
-                $dst = imagecreatetruecolor($newW, $newH);
-                if (str_contains($mime, 'png')) {
-                    imagealphablending($dst, false);
-                    imagesavealpha($dst, true);
+            try {
+                $info = @getimagesize($fullPath);
+                if (! $info) {
+                    return; // not a recognisable image (e.g. an SVG or PDF) — leave untouched
                 }
-                imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
-                imagedestroy($src);
-                $src = $dst;
-            }
+                $mime = $info['mime'] ?? '';
 
-            match (true) {
-                str_contains($mime, 'jpeg') => imagejpeg($src, $fullPath, $quality),
-                str_contains($mime, 'png') => imagepng($src, $fullPath, 6),
-                str_contains($mime, 'webp') => imagewebp($src, $fullPath, $quality),
-                default => null,
-            };
-            imagedestroy($src);
+                // Decide the real decoder from the file's actual content, not its
+                // extension — phone/screenshot uploads are sometimes mislabelled.
+                $src = match (true) {
+                    str_contains($mime, 'jpeg') => @imagecreatefromjpeg($fullPath),
+                    str_contains($mime, 'png') => @imagecreatefrompng($fullPath),
+                    str_contains($mime, 'webp') => @imagecreatefromwebp($fullPath),
+                    default => null,
+                };
+                if (! $src) {
+                    return;
+                }
+
+                $w = imagesx($src);
+                $h = imagesy($src);
+
+                if ($w > $maxWidth) {
+                    $newW = $maxWidth;
+                    $newH = (int) round($h * ($maxWidth / $w));
+                    $dst = imagecreatetruecolor($newW, $newH);
+                    if (str_contains($mime, 'png')) {
+                        imagealphablending($dst, false);
+                        imagesavealpha($dst, true);
+                    }
+                    imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $w, $h);
+                    imagedestroy($src);
+                    $src = $dst;
+                }
+
+                // Encode to a side-by-side temp file first, never straight over the
+                // original — imagejpeg()/imagepng() truncate their target the moment
+                // they open it, so a mid-encode failure (e.g. hitting memory_limit on
+                // a large phone photo) used to leave a 0-byte file behind instead of
+                // the original upload. Only swap it in once we know it's real.
+                $tmpPath = $fullPath.'.tmp';
+                $ok = match (true) {
+                    str_contains($mime, 'jpeg') => imagejpeg($src, $tmpPath, $quality),
+                    str_contains($mime, 'png') => imagepng($src, $tmpPath, 6),
+                    str_contains($mime, 'webp') => imagewebp($src, $tmpPath, $quality),
+                    default => false,
+                };
+                imagedestroy($src);
+
+                if ($ok && is_file($tmpPath) && filesize($tmpPath) > 0) {
+                    rename($tmpPath, $fullPath);
+                } elseif (is_file($tmpPath)) {
+                    @unlink($tmpPath);
+                }
+            } finally {
+                ini_set('memory_limit', $previousLimit);
+            }
         } catch (Throwable) {
             // Never let a compression hiccup break the upload — the original file just stays as-is.
         }
