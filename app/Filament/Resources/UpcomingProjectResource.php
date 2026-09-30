@@ -114,6 +114,7 @@ class UpcomingProjectResource extends Resource
     {
         return [
             RelationManagers\ImagesRelationManager::class,
+            RelationManagers\UpdatesRelationManager::class,
         ];
     }
 

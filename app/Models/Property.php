@@ -35,7 +35,12 @@ class Property extends Model
 
     public function images(): HasMany
     {
-        return $this->hasMany(PropertyImage::class);
+        return $this->hasMany(PropertyImage::class)->orderBy('sort_order');
+    }
+
+    public function updates(): HasMany
+    {
+        return $this->hasMany(ProjectUpdate::class)->orderByDesc('period_date');
     }
 
     public function videos(): HasMany

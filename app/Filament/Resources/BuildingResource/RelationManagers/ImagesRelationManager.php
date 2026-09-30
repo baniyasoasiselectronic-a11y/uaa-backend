@@ -61,7 +61,7 @@ class ImagesRelationManager extends RelationManager
                         // saveUploadedFileUsing() returns null for any image Cloudinary
                         // rejected (already surfaces its own notification) — drop those,
                         // keep whatever did upload successfully.
-                        $paths = array_values(array_filter((array) ($data['path'] ?? [])));
+                        $paths = UploadsToCloudinary::normalizePaths($data['path'] ?? []);
                         $baseOrder = (int) ($data['sort_order'] ?? 0);
 
                         if (! $paths) {
@@ -86,7 +86,19 @@ class ImagesRelationManager extends RelationManager
                         return $record;
                     }),
             ])
-            ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()])
+            ->actions([
+                Tables\Actions\EditAction::make()
+                    // Same collapse as PropertyResource's ImagesRelationManager —
+                    // the multi-file uploader always returns an array, but a
+                    // single edited row's 'path' column holds one plain string.
+                    ->mutateFormDataUsing(function (array $data): array {
+                        $paths = UploadsToCloudinary::normalizePaths($data['path'] ?? []);
+                        $data['path'] = $paths[0] ?? $data['path'];
+
+                        return $data;
+                    }),
+                Tables\Actions\DeleteAction::make(),
+            ])
             ->bulkActions([Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()])]);
     }
 }

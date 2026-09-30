@@ -20,6 +20,22 @@ use Throwable;
  */
 class UploadsToCloudinary
 {
+    /**
+     * Filament's multiple-FileUpload state has occasionally handed relation
+     * managers a path wrapped in its own single-item array instead of a
+     * plain string — flatten and drop empties so a malformed entry never
+     * gets persisted verbatim (seen once in the wild, cause not pinned down).
+     *
+     * @return list<string>
+     */
+    public static function normalizePaths(mixed $raw): array
+    {
+        return array_values(array_filter(array_map(
+            fn ($p) => is_array($p) ? (reset($p) ?: null) : $p,
+            (array) $raw
+        )));
+    }
+
     public static function apply(BaseFileUpload $upload, string $folder): BaseFileUpload
     {
         return $upload->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {

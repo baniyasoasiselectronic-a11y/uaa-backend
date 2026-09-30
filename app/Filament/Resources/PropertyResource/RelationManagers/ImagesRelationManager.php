@@ -66,7 +66,7 @@ class ImagesRelationManager extends RelationManager
                         // saveUploadedFileUsing() returns null for any image Cloudinary
                         // rejected (already surfaces its own notification) — drop those,
                         // keep whatever did upload successfully.
-                        $paths = array_values(array_filter((array) ($data['path'] ?? [])));
+                        $paths = UploadsToCloudinary::normalizePaths($data['path'] ?? []);
                         $baseOrder = (int) ($data['sort_order'] ?? 0);
 
                         if (! $paths) {
@@ -93,7 +93,18 @@ class ImagesRelationManager extends RelationManager
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    // The photo field is a multi-file uploader (for the Create
+                    // action's "several at once" flow), so editing a single
+                    // existing row always gets an array back for 'path' even
+                    // though the column holds one plain string — collapse it
+                    // before Filament's default update() touches the record.
+                    ->mutateFormDataUsing(function (array $data): array {
+                        $paths = UploadsToCloudinary::normalizePaths($data['path'] ?? []);
+                        $data['path'] = $paths[0] ?? $data['path'];
+
+                        return $data;
+                    }),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
