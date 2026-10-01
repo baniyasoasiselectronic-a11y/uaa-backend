@@ -38,7 +38,14 @@ class UploadsToCloudinary
 
     public static function apply(BaseFileUpload $upload, string $folder): BaseFileUpload
     {
-        return $upload->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {
+        return $upload
+            // Filament's default preview tries to resolve the stored value
+            // through the component's own disk — which only works for local
+            // paths. The value we save IS already the final Cloudinary URL,
+            // so just hand it straight back instead of letting Filament try
+            // (and silently fail) to resolve it itself.
+            ->getUploadedFileUrlUsing(fn (string $file): string => $file)
+            ->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {
             try {
                 if (! $file->exists()) {
                     return null;
