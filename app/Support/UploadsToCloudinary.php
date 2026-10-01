@@ -43,22 +43,56 @@ class UploadsToCloudinary
             // filament/forms BaseFileUpload) checks the stored value against
             // the component's local disk before building a preview URL —
             // which always fails for a Cloudinary URL, leaving the preview
-            // blank even though the save succeeded. Override it to recognise
-            // our own stored value (an http(s) URL) and hand it back as-is;
-            // anything else falls through to null, matching the default's
-            // own "can't resolve it" behavior rather than guessing further.
+            // blank even though the save succeeded. Short-circuit for our
+            // own stored value (an http(s) URL) and hand it back as-is;
+            // anything else (older rows that still store a plain relative
+            // path from before the Cloudinary migration) falls through to
+            // a faithful copy of Filament's own original logic below, so
+            // those keep resolving exactly as they always did.
             ->getUploadedFileUsing(function (BaseFileUpload $component, mixed $file, string|array|null $storedFileNames): ?array {
-                if (! is_string($file) || ! str_starts_with($file, 'http')) {
+                if (! is_string($file)) {
                     return null;
                 }
 
                 $name = $component->isMultiple() ? ($storedFileNames[$file] ?? null) : $storedFileNames;
 
+                if (str_starts_with($file, 'http')) {
+                    return [
+                        'name' => $name ?: (basename(parse_url($file, PHP_URL_PATH) ?: '') ?: 'image'),
+                        'size' => 0,
+                        'type' => null,
+                        'url' => $file,
+                    ];
+                }
+
+                $storage = $component->getDisk();
+                $shouldFetchFileInformation = $component->shouldFetchFileInformation();
+
+                if ($shouldFetchFileInformation) {
+                    try {
+                        if (! $storage->exists($file)) {
+                            return null;
+                        }
+                    } catch (Throwable $exception) {
+                        return null;
+                    }
+                }
+
+                $url = null;
+                if ($component->getVisibility() === 'private') {
+                    try {
+                        $url = $storage->temporaryUrl($file, now()->addMinutes(5));
+                    } catch (Throwable $exception) {
+                        // This driver does not support creating temporary URLs.
+                    }
+                }
+                $url ??= $storage->url($file);
+
                 return [
-                    'name' => $name ?: (basename(parse_url($file, PHP_URL_PATH) ?: '') ?: 'image'),
-                    'size' => 0,
-                    'type' => null,
-                    'url' => $file,
+                    'name' => $name ?? basename($file),
+                    'size' => $shouldFetchFileInformation ? $storage->size($file) : 0,
+                    'type' => $shouldFetchFileInformation ? $storage->mimeType($file) : null,
+                    'url' => $url,
                 ];
             })
             ->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {
