@@ -76,6 +76,7 @@ class UpdatesRelationManager extends RelationManager
             ->recordTitleAttribute('title')
             ->defaultSort('period_date', 'desc')
             ->columns([
+                Tables\Columns\ImageColumn::make('thumbnail')->label('Preview'),
                 Tables\Columns\TextColumn::make('period_date')->label('Month')->date('F Y')->sortable(),
                 Tables\Columns\TextColumn::make('title')->label('Title')->default('Construction Progress Update'),
                 Tables\Columns\TextColumn::make('images_count')->counts('images')->label('Photos'),

@@ -23,4 +23,9 @@ class ProjectUpdate extends Model
     {
         return $this->hasMany(ProjectUpdateImage::class)->orderBy('sort_order');
     }
+
+    public function getThumbnailAttribute(): ?string
+    {
+        return $this->images->first()?->path;
+    }
 }
