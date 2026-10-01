@@ -38,7 +38,30 @@ class UploadsToCloudinary
 
     public static function apply(BaseFileUpload $upload, string $folder): BaseFileUpload
     {
-        return $upload->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {
+        return $upload
+            // Filament's own default getUploadedFileUsing() (see vendor
+            // filament/forms BaseFileUpload) checks the stored value against
+            // the component's local disk before building a preview URL —
+            // which always fails for a Cloudinary URL, leaving the preview
+            // blank even though the save succeeded. Override it to recognise
+            // our own stored value (an http(s) URL) and hand it back as-is;
+            // anything else falls through to null, matching the default's
+            // own "can't resolve it" behavior rather than guessing further.
+            ->getUploadedFileUsing(function (BaseFileUpload $component, mixed $file, string|array|null $storedFileNames): ?array {
+                if (! is_string($file) || ! str_starts_with($file, 'http')) {
+                    return null;
+                }
+
+                $name = $component->isMultiple() ? ($storedFileNames[$file] ?? null) : $storedFileNames;
+
+                return [
+                    'name' => $name ?: (basename(parse_url($file, PHP_URL_PATH) ?: '') ?: 'image'),
+                    'size' => 0,
+                    'type' => null,
+                    'url' => $file,
+                ];
+            })
+            ->saveUploadedFileUsing(function (BaseFileUpload $component, TemporaryUploadedFile $file) use ($folder): ?string {
             try {
                 if (! $file->exists()) {
                     return null;
