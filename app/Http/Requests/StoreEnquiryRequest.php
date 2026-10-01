@@ -15,7 +15,7 @@ class StoreEnquiryRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'property_id' => ['nullable', 'integer', 'exists:properties,id'],
             'unit_id' => ['nullable', 'integer', 'exists:units,id'],
