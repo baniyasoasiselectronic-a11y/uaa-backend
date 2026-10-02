@@ -39,6 +39,18 @@ class UploadsToCloudinary
     public static function apply(BaseFileUpload $upload, string $folder): BaseFileUpload
     {
         return $upload
+            // Filament's own afterStateHydrated() (see vendor filament/forms
+            // BaseFileUpload::setUp()) runs BEFORE getUploadedFileUsing()
+            // below ever gets a chance to run: it silently drops any stored
+            // value that fails $disk->exists() on the component's *local*
+            // disk, which a Cloudinary URL always does. That left the field
+            // looking empty even though getUploadedFileUsing() alone was
+            // fixed to handle it — the value never survived hydration to
+            // reach that code. Disabling fetchFileInformation() skips that
+            // existence check entirely, so our stored URL (or an older
+            // plain relative path) reaches getUploadedFileUsing() below,
+            // which still knows how to resolve either kind.
+            ->fetchFileInformation(false)
             // Filament's own default getUploadedFileUsing() (see vendor
             // filament/forms BaseFileUpload) checks the stored value against
             // the component's local disk before building a preview URL —
