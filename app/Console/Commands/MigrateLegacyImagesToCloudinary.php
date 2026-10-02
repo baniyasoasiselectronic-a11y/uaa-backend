@@ -23,7 +23,13 @@ use Throwable;
  * fetch directly from a remote URL, so this never touches local disk itself:
  * it resolves each legacy path to its current public URL and hands that to
  * Cloudinary's upload API, then rewrites the DB column to the returned
- * secure_url. Safe to re-run — anything already an http(s) URL is skipped.
+ * secure_url. Safe to re-run — anything already a Cloudinary URL is skipped.
+ *
+ * "Legacy" is detected as "doesn't already point at res.cloudinary.com", not
+ * "isn't an absolute URL" — some pre-migration rows store the already-
+ * resolved adminpanel.uaa.ae/storage/... URL rather than a bare relative
+ * path (e.g. akasya-west's property main_image), so checking for a missing
+ * http(s) prefix alone would silently skip those.
  */
 class MigrateLegacyImagesToCloudinary extends Command
 {
@@ -55,7 +61,8 @@ class MigrateLegacyImagesToCloudinary extends Command
 
             $rows = $modelClass::query()
                 ->whereNotNull($column)
-                ->where($column, 'not like', 'http%')
+                ->where($column, '!=', '')
+                ->where($column, 'not like', '%cloudinary.com%')
                 ->get();
 
             if ($rows->isEmpty()) {
@@ -66,7 +73,11 @@ class MigrateLegacyImagesToCloudinary extends Command
 
             foreach ($rows as $row) {
                 $localPath = $row->{$column};
-                $publicUrl = Str::startsWith($localPath, '/') ? url($localPath) : Storage::url($localPath);
+                $publicUrl = match (true) {
+                    Str::startsWith($localPath, ['http://', 'https://']) => $localPath,
+                    Str::startsWith($localPath, '/') => url($localPath),
+                    default => Storage::url($localPath),
+                };
 
                 if ($dryRun) {
                     $this->line("  [dry-run] #{$row->id}: {$localPath} -> would upload {$publicUrl}");
