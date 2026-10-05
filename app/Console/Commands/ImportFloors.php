@@ -21,7 +21,8 @@ class ImportFloors extends Command
 {
     protected $signature = 'uaa:import-floors {slug : Property slug, e.g. akasya-east}
                             {--replace : Delete the property\'s existing floors first}
-                            {--dry-run : Show what would be imported without uploading or saving}';
+                            {--dry-run : Show what would be imported without uploading or saving}
+                            {--description-only : Only update the project description from description.md}';
 
     protected $description = 'Import floors and apartment types for a project from its manifest';
 
@@ -43,6 +44,21 @@ class ImportFloors extends Command
             $this->error("No property with slug '{$slug}'.");
 
             return self::FAILURE;
+        }
+
+        $descPath = "{$dir}/description.md";
+        $description = is_file($descPath) ? trim(file_get_contents($descPath)) : null;
+
+        if ($this->option('description-only')) {
+            if (! $description) {
+                $this->error("No description.md found at {$descPath}");
+
+                return self::FAILURE;
+            }
+            $property->update(['description' => $description]);
+            $this->info("Description updated for {$property->title}.");
+
+            return self::SUCCESS;
         }
 
         if ($property->floors()->exists() && ! $this->option('replace')) {
@@ -105,7 +121,7 @@ class ImportFloors extends Command
             return self::FAILURE;
         }
 
-        DB::transaction(function () use ($property, $manifest, $stored) {
+        DB::transaction(function () use ($property, $manifest, $stored, $description) {
             if ($this->option('replace')) {
                 $property->floors()->delete();
             }
@@ -134,6 +150,7 @@ class ImportFloors extends Command
             $property->update([
                 'total_apartments' => $manifest['total_apartments'] ?? null,
                 'built_up_sqm' => $manifest['built_up_sqm'] ?? null,
+                'description' => $description ?: $property->description,
             ]);
         });
 
