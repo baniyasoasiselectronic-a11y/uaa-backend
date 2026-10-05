@@ -43,6 +43,11 @@ class Property extends Model
         return $this->hasMany(ProjectUpdate::class)->orderByDesc('period_date');
     }
 
+    public function floorPlans(): HasMany
+    {
+        return $this->hasMany(PropertyFloorPlan::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function videos(): HasMany
     {
         return $this->hasMany(PropertyVideo::class);

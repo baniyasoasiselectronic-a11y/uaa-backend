@@ -194,6 +194,7 @@ class PropertyResource extends Resource
             RelationManagers\VideosRelationManager::class,
             RelationManagers\FeaturesRelationManager::class,
             RelationManagers\UnitsRelationManager::class,
+            RelationManagers\FloorPlansRelationManager::class,
             RelationManagers\UpdatesRelationManager::class,
         ];
     }

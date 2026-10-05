@@ -51,6 +51,14 @@ class PropertyResource extends JsonResource
                 'alt' => $img->alt,
                 'is_main' => (bool) $img->is_main,
             ])),
+            'floor_plans' => $this->whenLoaded('floorPlans', fn () => $this->floorPlans->map(fn ($p) => [
+                'id' => $p->id,
+                'title' => $p->title,
+                'url' => $this->url($p->path),
+                'area' => $p->area,
+                'bedrooms' => $p->bedrooms,
+                'notes' => $p->notes,
+            ])),
             'updates' => $this->whenLoaded('updates', fn () => $this->updates->map(fn ($u) => [
                 'id' => $u->id,
                 'title' => $u->title ?: 'Construction Progress Update',
