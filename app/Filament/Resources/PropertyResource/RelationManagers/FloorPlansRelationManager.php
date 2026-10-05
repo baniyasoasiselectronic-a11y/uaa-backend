@@ -18,7 +18,7 @@ class FloorPlansRelationManager extends RelationManager
 {
     protected static string $relationship = 'floorPlans';
 
-    protected static ?string $title = 'Floor Plans';
+    protected static ?string $title = 'Floor Plans (simple)';
 
     public function form(Form $form): Form
     {

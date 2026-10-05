@@ -67,6 +67,12 @@ class UpcomingProjectResource extends Resource
                     ->numeric()
                     ->prefix('AED')
                     ->label('Starting price'),
+                Forms\Components\TextInput::make('total_apartments')
+                    ->numeric()
+                    ->label('Total apartments in the project'),
+                Forms\Components\TextInput::make('built_up_sqm')
+                    ->numeric()
+                    ->label('Total built-up area (sq m)'),
                 UploadsToCloudinary::apply(
                     Forms\Components\FileUpload::make('main_image')
                         ->label('Main image')
@@ -114,6 +120,7 @@ class UpcomingProjectResource extends Resource
     {
         return [
             RelationManagers\ImagesRelationManager::class,
+            RelationManagers\FloorsRelationManager::class,
             RelationManagers\FloorPlansRelationManager::class,
             RelationManagers\UpdatesRelationManager::class,
         ];

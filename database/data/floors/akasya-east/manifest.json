@@ -1,0 +1,418 @@
+{
+  "property": "akasya-east",
+  "total_apartments": 45,
+  "built_up_sqm": 5117.48,
+  "floors": [
+    {
+      "label": "1st Floor",
+      "sort_order": 1,
+      "overview": "f1-overview.jpg",
+      "total_area_sqm": 780.52,
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 66.59,
+          "image": "f1-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 27.93,
+          "image": "f1-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.58,
+          "image": "f1-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.66,
+          "image": "f1-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.07,
+          "image": "f1-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 24.15,
+          "image": "f1-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 22.2,
+          "image": "f1-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "2nd Floor",
+      "sort_order": 2,
+      "overview": "f2-overview.jpg",
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 53.15,
+          "image": "typical-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 19.63,
+          "image": "typical-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.1,
+          "image": "typical-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.67,
+          "image": "typical-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.59,
+          "image": "typical-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 15.6,
+          "image": "typical-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 8.83,
+          "image": "typical-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "3rd Floor",
+      "sort_order": 3,
+      "overview": "f3-overview.jpg",
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 53.15,
+          "image": "typical-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 19.63,
+          "image": "typical-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.1,
+          "image": "typical-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.67,
+          "image": "typical-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.59,
+          "image": "typical-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 15.6,
+          "image": "typical-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 8.83,
+          "image": "typical-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "4th Floor",
+      "sort_order": 4,
+      "overview": "f4-overview.jpg",
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 53.15,
+          "image": "typical-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 19.63,
+          "image": "typical-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.1,
+          "image": "typical-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.67,
+          "image": "typical-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.59,
+          "image": "typical-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 15.6,
+          "image": "typical-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 8.83,
+          "image": "typical-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "5th Floor",
+      "sort_order": 5,
+      "overview": "f5-overview.jpg",
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 53.15,
+          "image": "typical-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 19.63,
+          "image": "typical-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.1,
+          "image": "typical-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.67,
+          "image": "typical-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.59,
+          "image": "typical-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 15.6,
+          "image": "typical-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 8.83,
+          "image": "typical-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "6th Floor",
+      "sort_order": 6,
+      "overview": "f6-overview.jpg",
+      "units": [
+        {
+          "type": "3B01",
+          "bedrooms": 3,
+          "suite_sqm": 131.61,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 53.15,
+          "image": "typical-3B01.jpg"
+        },
+        {
+          "type": "2B02",
+          "bedrooms": 2,
+          "suite_sqm": 80.7,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 19.63,
+          "image": "typical-2B02.jpg"
+        },
+        {
+          "type": "2B03",
+          "bedrooms": 2,
+          "suite_sqm": 81.71,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 11.1,
+          "image": "typical-2B03.jpg"
+        },
+        {
+          "type": "2B04",
+          "bedrooms": 2,
+          "suite_sqm": 76.68,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.67,
+          "image": "typical-2B04.jpg"
+        },
+        {
+          "type": "2B05",
+          "bedrooms": 2,
+          "suite_sqm": 81.53,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 14.59,
+          "image": "typical-2B05.jpg"
+        },
+        {
+          "type": "2B06",
+          "bedrooms": 2,
+          "suite_sqm": 72.24,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 15.6,
+          "image": "typical-2B06.jpg"
+        },
+        {
+          "type": "1B07",
+          "bedrooms": 1,
+          "suite_sqm": 74.86,
+          "outdoor_label": "Balcony",
+          "outdoor_sqm": 8.83,
+          "image": "typical-1B07.jpg"
+        }
+      ]
+    },
+    {
+      "label": "7th Floor",
+      "sort_order": 7,
+      "overview": null,
+      "total_area_sqm": 737.06,
+      "units": [
+        {
+          "type": "3B08",
+          "bedrooms": 3,
+          "suite_sqm": 141.01,
+          "outdoor_label": "Terrace",
+          "outdoor_sqm": 143.12,
+          "image": null
+        },
+        {
+          "type": "3B09",
+          "bedrooms": 3,
+          "suite_sqm": 129.96,
+          "outdoor_label": "Terrace",
+          "outdoor_sqm": 84.57,
+          "image": null
+        },
+        {
+          "type": "3B10",
+          "bedrooms": 3,
+          "suite_sqm": 140.02,
+          "outdoor_label": "Terrace",
+          "outdoor_sqm": 98.38,
+          "image": null
+        }
+      ]
+    }
+  ]
+}

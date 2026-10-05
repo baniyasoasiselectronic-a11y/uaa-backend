@@ -48,6 +48,11 @@ class Property extends Model
         return $this->hasMany(PropertyFloorPlan::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    public function floors(): HasMany
+    {
+        return $this->hasMany(PropertyFloor::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function videos(): HasMany
     {
         return $this->hasMany(PropertyVideo::class);

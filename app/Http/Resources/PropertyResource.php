@@ -51,6 +51,30 @@ class PropertyResource extends JsonResource
                 'alt' => $img->alt,
                 'is_main' => (bool) $img->is_main,
             ])),
+            'total_apartments' => $this->total_apartments,
+            'built_up_sqm' => $this->built_up_sqm !== null ? (float) $this->built_up_sqm : null,
+            'floors' => $this->whenLoaded('floors', fn () => $this->floors->map(fn ($f) => [
+                'id' => $f->id,
+                'label' => $f->label,
+                'plan_url' => $f->plan_image ? $this->url($f->plan_image) : null,
+                'total_apartments' => $f->total_apartments ?? $f->units->count(),
+                'total_area_sqm' => $f->total_area_sqm !== null
+                    ? (float) $f->total_area_sqm
+                    : round($f->units->sum(fn ($u) => (float) $u->total_sqm), 2),
+                'notes' => $f->notes,
+                'units' => $f->units->map(fn ($u) => [
+                    'id' => $u->id,
+                    'type' => $u->unit_type,
+                    'bedrooms' => $u->bedrooms,
+                    'category' => \App\Models\PropertyFloorUnit::categoryLabel($u->bedrooms),
+                    'suite_sqm' => $u->suite_sqm !== null ? (float) $u->suite_sqm : null,
+                    'outdoor_label' => $u->outdoor_label,
+                    'outdoor_sqm' => $u->outdoor_sqm !== null ? (float) $u->outdoor_sqm : null,
+                    'total_sqm' => $u->total_sqm,
+                    'url' => $u->image ? $this->url($u->image) : null,
+                    'notes' => $u->notes,
+                ])->values(),
+            ])),
             'floor_plans' => $this->whenLoaded('floorPlans', fn () => $this->floorPlans->map(fn ($p) => [
                 'id' => $p->id,
                 'title' => $p->title,

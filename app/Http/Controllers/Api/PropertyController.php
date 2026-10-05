@@ -118,7 +118,7 @@ class PropertyController extends Controller
             ->where('is_published', true)
             ->with([
                 'community', 'propertyType', 'amenities', 'images', 'videos',
-                'features', 'units.floor', 'seo', 'updates.images', 'floorPlans',
+                'features', 'units.floor', 'seo', 'updates.images', 'floorPlans', 'floors.units',
             ])
             ->firstOrFail();
 
