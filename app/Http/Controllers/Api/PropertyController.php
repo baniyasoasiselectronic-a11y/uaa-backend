@@ -7,6 +7,7 @@ use App\Http\Resources\PropertyListResource;
 use App\Http\Resources\PropertyResource;
 use App\Models\Property;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class PropertyController extends Controller
 {
@@ -113,13 +114,24 @@ class PropertyController extends Controller
      */
     public function show(string $slug)
     {
+        $with = [
+            'community', 'propertyType', 'amenities', 'images', 'videos',
+            'features', 'units.floor', 'seo', 'updates.images',
+        ];
+
+        // Newer relations are only loaded once their tables exist, so pulling new
+        // code before running `php artisan migrate` can never take every project
+        // page down with a 500.
+        foreach (['floorPlans' => 'property_floor_plans', 'floors.units' => 'property_floors'] as $relation => $table) {
+            if (Schema::hasTable($table)) {
+                $with[] = $relation;
+            }
+        }
+
         $property = Property::query()
             ->where('slug', $slug)
             ->where('is_published', true)
-            ->with([
-                'community', 'propertyType', 'amenities', 'images', 'videos',
-                'features', 'units.floor', 'seo', 'updates.images', 'floorPlans', 'floors.units',
-            ])
+            ->with($with)
             ->firstOrFail();
 
         $property->increment('views');
