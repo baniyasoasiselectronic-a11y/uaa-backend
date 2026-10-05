@@ -4,13 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * Move-in / move-out inspection report for a tenant's unit — carried over
- * from the old WordPress site's "Move In / Move Out" section.
+ * from the old WordPress "Move In / Move Out" plugin. The room-by-room
+ * checklist (status, notes, charge, photos) is stored in the `rooms` JSON
+ * column, keyed by room id; see App\Support\MoveInspection.
  */
 class MoveReport extends Model
 {
@@ -18,12 +19,13 @@ class MoveReport extends Model
 
     protected $casts = [
         'report_date' => 'date',
-        'photos' => 'array',
+        'rooms' => 'array',
+        'subtotal' => 'decimal:2',
+        'vat_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
     ];
 
     public const TYPES = ['move_in' => 'Move In', 'move_out' => 'Move Out'];
-
-    public const CONDITIONS = ['good' => 'Good', 'fair' => 'Fair', 'damaged' => 'Damaged', 'missing' => 'Missing', 'na' => 'N/A'];
 
     protected static function booted(): void
     {
@@ -43,27 +45,17 @@ class MoveReport extends Model
         return $this->belongsTo(Property::class);
     }
 
-    public function items(): HasMany
-    {
-        return $this->hasMany(MoveReportItem::class)->orderBy('sort_order');
-    }
-
     public function getTypeLabelAttribute(): string
     {
         return self::TYPES[$this->type] ?? ucfirst(str_replace('_', ' ', (string) $this->type));
     }
 
-    public function getTotalAttribute(): float
-    {
-        return (float) $this->items->sum('charge');
-    }
-
-    /** @return list<string> */
-    public function photoUrls(): array
+    /** Photo URLs for one room (full http(s) URLs pass through; paths resolve on the public disk). */
+    public static function photoUrls(?array $paths): array
     {
         return array_values(array_map(
             fn ($p) => str_starts_with($p, 'http') ? $p : Storage::disk('public')->url($p),
-            array_filter((array) $this->photos)
+            array_filter((array) $paths)
         ));
     }
 }

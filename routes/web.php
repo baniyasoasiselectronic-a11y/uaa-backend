@@ -14,5 +14,5 @@ Route::get('/admin/move-reports/{moveReport}/print', function (\App\Models\MoveR
     }
     abort_unless($user->canAccessPanel(\Filament\Facades\Filament::getPanel('admin')), 403);
 
-    return view('move-reports.print', ['r' => $moveReport->load(['items', 'property'])]);
+    return view('move-reports.print', ['r' => $moveReport->load("property")]);
 })->middleware('web')->name('move-reports.print');
