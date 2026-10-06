@@ -34,6 +34,7 @@ class MoveInOutSettings extends Page implements HasForms
         $this->form->fill([
             'oracle_api_url' => UaaOracle::setting(UaaOracle::URL_KEY),
             'inspectors' => UaaOracle::setting(UaaOracle::INSPECTORS_KEY),
+            'renewal_staff' => UaaOracle::setting('renewal_staff'),
         ]);
     }
 
@@ -54,6 +55,10 @@ class MoveInOutSettings extends Page implements HasForms
                         ->label('Inspector names')
                         ->rows(5)
                         ->helperText('One name per line. These appear in the Inspector list on every new inspection.'),
+                    Forms\Components\Textarea::make('renewal_staff')
+                        ->label('Contract renewal staff ("Renewed by")')
+                        ->rows(3)
+                        ->helperText('One name per line. Used in the Renewed by list on Contract Renewals.'),
                 ]),
             ]);
     }
@@ -63,6 +68,7 @@ class MoveInOutSettings extends Page implements HasForms
         $d = $this->form->getState();
         UaaOracle::put(UaaOracle::URL_KEY, $d['oracle_api_url'] ?? null);
         UaaOracle::put(UaaOracle::INSPECTORS_KEY, $d['inspectors'] ?? null);
+        UaaOracle::put('renewal_staff', $d['renewal_staff'] ?? null);
 
         Notification::make()->title('Settings saved')->success()->send();
     }

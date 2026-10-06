@@ -25,7 +25,7 @@ class MoveReport extends Model
         'total_amount' => 'decimal:2',
     ];
 
-    public const TYPES = ['move_in' => 'Move In', 'move_out' => 'Move Out'];
+    public const TYPES = ['move_in' => 'Move In', 'move_out' => 'Move Out', 'renewal' => 'Renewal', 'legal' => 'Legal'];
 
     protected static function booted(): void
     {

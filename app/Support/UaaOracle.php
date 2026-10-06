@@ -39,10 +39,16 @@ class UaaOracle
         return $u !== '' ? rtrim($u, '/') : null;
     }
 
+    /** Values of a multi-line setting (one per line). */
+    public static function lines(string $key): array
+    {
+        return array_values(array_filter(array_map('trim', preg_split('/\R/', (string) self::setting($key)))));
+    }
+
     /** Inspector names from Settings, one per line. */
     public static function inspectors(): array
     {
-        return array_values(array_filter(array_map('trim', preg_split('/\R/', (string) self::setting(self::INSPECTORS_KEY)))));
+        return self::lines(self::INSPECTORS_KEY);
     }
 
     /** @return array<int, array<string, mixed>> */
