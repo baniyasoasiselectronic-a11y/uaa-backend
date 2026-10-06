@@ -65,7 +65,7 @@ tr.dmg td{background:#fdf1f1}tr.mnt td{background:#fdf7e8}
     <div><span>Inspection date</span><b>{{ $r->report_date->format('d M Y') }}</b></div>
     <div><span>Inspector</span><b>{{ $r->inspector ?: '—' }}</b></div>
     <div><span>Contract no.</span><b>{{ $r->contract_no ?: '—' }}</b></div>
-    <div><span>Property / unit</span><b>{{ $r->property?->title ?: '—' }}{{ $r->unit_label ? ' — '.$r->unit_label : '' }}</b></div>
+    <div><span>Property / unit</span><b>{{ $r->property_name ?: $r->property?->title ?: '—' }}{{ $r->unit_label ? ' — '.$r->unit_label : '' }}</b></div>
     <div><span>Unit type</span><b>{{ $r->unit_type ?: '—' }}</b></div>
     <div><span>Bedrooms</span><b>{{ $r->beds ?: '—' }}</b></div>
     <div><span>Tenant</span><b>{{ $r->tenant_name }}</b></div>

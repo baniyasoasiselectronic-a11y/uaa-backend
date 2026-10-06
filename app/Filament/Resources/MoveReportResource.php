@@ -5,10 +5,12 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\MoveReportResource\Pages;
 use App\Models\MoveReport;
 use App\Support\MoveInspection;
+use App\Support\UaaOracle;
 use App\Support\UploadsToCloudinary;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -31,6 +33,9 @@ class MoveReportResource extends Resource
     public static function form(Form $form): Form
     {
         $unitTypes = ['Apartment', 'Studio', 'Villa', 'Shop', 'Office', 'Other'];
+        $oracle = UaaOracle::available();
+        $inspectors = UaaOracle::inspectors();
+        $unitTypeOptions = $oracle && UaaOracle::unitTypes() ? UaaOracle::unitTypes() : array_combine($unitTypes, $unitTypes);
         $beds = ['Studio', '1 Bedroom', '2 Bedroom', '3 Bedroom', '4 Bedroom', '5 Bedroom', 'N/A'];
 
         $roomSections = [];
@@ -90,11 +95,15 @@ class MoveReportResource extends Resource
                     ->default('move_in')
                     ->required(),
                 Forms\Components\DatePicker::make('report_date')->label('Inspection date')->default(now())->required(),
-                Forms\Components\TextInput::make('inspector')
-                    ->default(fn () => auth()->user()?->name)
-                    ->datalist(['Jaseel'])
-                    ->required()
-                    ->maxLength(255),
+                $inspectors
+                    ? Forms\Components\Select::make('inspector')
+                        ->options(array_combine($inspectors, $inspectors))
+                        ->searchable()
+                        ->required()
+                    : Forms\Components\TextInput::make('inspector')
+                        ->default(fn () => auth()->user()?->name)
+                        ->required()
+                        ->maxLength(255),
                 Forms\Components\TextInput::make('reference')
                     ->placeholder('Generated automatically')
                     ->disabled()
@@ -102,13 +111,37 @@ class MoveReportResource extends Resource
                     ->visibleOn(['edit']),
             ]),
             Forms\Components\Section::make('Property & unit')->columns(3)->schema([
+                // Buildings / units come from the Oracle API when it is reachable; otherwise type them in.
+                Forms\Components\Select::make('oracle_property_id')
+                    ->label('Property')
+                    ->options(fn () => UaaOracle::properties())
+                    ->searchable()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, Set $set) {
+                        $set('property_name', UaaOracle::properties()[$state] ?? null);
+                        $set('unit_label', null);
+                        $set('oracle_unit_id', null);
+                    })
+                    ->visible($oracle),
+                Forms\Components\Hidden::make('property_name'),
+                Forms\Components\Hidden::make('oracle_unit_id'),
+                Forms\Components\Select::make('unit_label')
+                    ->label('Unit number')
+                    ->options(fn (Get $get) => UaaOracle::units($get('oracle_property_id')))
+                    ->searchable()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('oracle_unit_id', UaaOracle::unitId($get('oracle_property_id'), $state)))
+                    ->visible($oracle),
                 Forms\Components\Select::make('property_id')
                     ->label('Property')
                     ->relationship('property', 'title')
                     ->searchable()
-                    ->preload(),
-                Forms\Components\TextInput::make('unit_label')->label('Unit number')->placeholder('e.g. 101')->required()->maxLength(100),
-                Forms\Components\Select::make('unit_type')->options(array_combine($unitTypes, $unitTypes)),
+                    ->preload()
+                    ->visible(! $oracle),
+                Forms\Components\TextInput::make('unit_label')->label('Unit number')->placeholder('e.g. 101')->required()->maxLength(100)->visible(! $oracle),
+                Forms\Components\Select::make('unit_type')->options($unitTypeOptions),
                 Forms\Components\Select::make('beds')->label('Bedrooms')->options(array_combine($beds, $beds)),
             ]),
             Forms\Components\Section::make('Tenant')->columns(3)->schema([
@@ -159,7 +192,7 @@ class MoveReportResource extends Resource
                 Tables\Columns\TextColumn::make('tenant_name')->label('Tenant')->searchable()->description(fn ($record) => $record->tenant_phone),
                 Tables\Columns\TextColumn::make('unit_label')
                     ->label('Property / Unit')
-                    ->formatStateUsing(fn ($state, $record) => trim(($record->property?->title ?? '—').($state ? ' — '.$state : '')))
+                    ->formatStateUsing(fn ($state, $record) => trim(($record->property_name ?: $record->property?->title ?: '—').($state ? ' — '.$state : '')))
                     ->searchable(),
                 Tables\Columns\TextColumn::make('unit_type')->label('Unit type'),
                 Tables\Columns\TextColumn::make('total_amount')
