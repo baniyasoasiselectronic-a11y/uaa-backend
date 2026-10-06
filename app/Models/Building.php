@@ -12,7 +12,21 @@ class Building extends Model
 
     protected $casts = [
         'average_price' => 'decimal:2',
+        'latitude' => 'float',
+        'longitude' => 'float',
     ];
+
+    protected static function booted(): void
+    {
+        // Staff paste a Google Maps link; keep exact coordinates in sync with it.
+        static::saving(function (self $b) {
+            if ($b->map_url && ($b->isDirty('map_url') || $b->latitude === null)) {
+                if ($c = \App\Support\GoogleMapsLink::coordinates($b->map_url)) {
+                    [$b->latitude, $b->longitude] = $c;
+                }
+            }
+        });
+    }
 
     public function images(): HasMany
     {

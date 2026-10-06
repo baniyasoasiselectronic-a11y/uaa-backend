@@ -24,6 +24,10 @@ class BuildingResource extends JsonResource
             'currency' => 'AED',
             'floors_count' => $this->floors_count,
             'year_built' => $this->year_built,
+            'address' => $this->address,
+            'latitude' => $this->latitude !== null ? (float) $this->latitude : null,
+            'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
+            'map_url' => $this->map_url,
             'images' => $this->imageUrls(),
             'community' => $this->whenLoaded('community', fn () => $this->community ? [
                 'id' => $this->community->id,

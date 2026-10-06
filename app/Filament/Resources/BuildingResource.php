@@ -42,6 +42,32 @@ class BuildingResource extends Resource
                 Forms\Components\TextInput::make('floors_count')
                     ->numeric(),
                 Forms\Components\TextInput::make('year_built'),
+                Forms\Components\Section::make('Location on Google Maps')
+                    ->description('Shown as an exact pin on the building page. Open the building in Google Maps, press Share, copy the link and paste it below — the coordinates are filled in automatically when you save.')
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->schema([
+                        Forms\Components\TextInput::make('address')
+                            ->label('Address (shown under the map)')
+                            ->placeholder('e.g. Baniyas Road, Deira, Dubai')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('map_url')
+                            ->label('Google Maps link')
+                            ->placeholder('https://maps.app.goo.gl/…  or  https://www.google.com/maps/place/…')
+                            ->maxLength(600)
+                            ->rule(fn () => function (string $attribute, $value, \Closure $fail) {
+                                if ($value && ! \App\Support\GoogleMapsLink::coordinates($value)) {
+                                    $fail('Could not read a location from this link. Paste the Share link of the pin, or enter the latitude and longitude below.');
+                                }
+                            })
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('latitude')
+                            ->numeric()->minValue(-90)->maxValue(90)
+                            ->helperText('Filled from the link. Or type it: in Google Maps right-click the pin and click the numbers to copy.'),
+                        Forms\Components\TextInput::make('longitude')
+                            ->numeric()->minValue(-180)->maxValue(180),
+                    ]),
                 Forms\Components\TextInput::make('average_price')
                     ->label('Average price / budget')
                     ->numeric()
