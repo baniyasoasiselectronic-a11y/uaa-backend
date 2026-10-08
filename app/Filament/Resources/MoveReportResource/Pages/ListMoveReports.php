@@ -12,6 +12,6 @@ class ListMoveReports extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [Actions\CreateAction::make()->label('New report')];
+        return [Actions\Action::make('new')->label('New inspection')->icon('heroicon-o-plus')->url('/inspection')->openUrlInNewTab()];
     }
 }

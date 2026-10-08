@@ -110,6 +110,23 @@ class UaaOracle
         return $out;
     }
 
+    /** Units of a building in the shape the inspection screens expect. */
+    public static function unitRows(?string $propertyId): array
+    {
+        if (! $propertyId) {
+            return [];
+        }
+        $out = [];
+        foreach (self::fetch('/units/') as $u) {
+            if ((string) ($u['PROPERTY_ID'] ?? '') === (string) $propertyId && isset($u['UNIT_NO'])) {
+                $out[] = ['unit_id' => (string) ($u['UNIT_ID'] ?? $u['UNIT_NO']), 'unit_no' => (string) $u['UNIT_NO'], 'unit_type' => '', 'status' => ''];
+            }
+        }
+        usort($out, fn ($a, $b) => strnatcasecmp($a['unit_no'], $b['unit_no']));
+
+        return $out;
+    }
+
     /** Oracle unit id for a property + unit no (kept on the report for reference). */
     public static function unitId(?string $propertyId, ?string $unitNo): ?string
     {

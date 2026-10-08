@@ -50,6 +50,15 @@ class MoveInOutSettings extends Page implements HasForms
                         ->placeholder('https://…')
                         ->helperText('The buildings, units and unit types in the inspection form come from this address (same one the old UAA plugin used). Leave empty to type them by hand.'),
                 ]),
+                Forms\Components\Section::make('Inspector portal (PIN)')->schema([
+                    Forms\Components\TextInput::make('portal_pin')
+                        ->label('Inspection PIN')
+                        ->password()
+                        ->revealable()
+                        ->autocomplete('new-password')
+                        ->maxLength(40)
+                        ->helperText(fn () => (UaaOracle::setting('move_portal_pin_hash') ? 'A PIN is set. Type a new one to change it; leave blank to keep it. ' : 'No PIN set yet — the page stays closed to inspectors until you set one. ').'Inspectors open ' . url('/inspection') . ' and enter this PIN. Signed-in admins can open it without a PIN.'),
+                ]),
                 Forms\Components\Section::make('Inspectors')->schema([
                     Forms\Components\Textarea::make('inspectors')
                         ->label('Inspector names')
@@ -69,6 +78,10 @@ class MoveInOutSettings extends Page implements HasForms
         UaaOracle::put(UaaOracle::URL_KEY, $d['oracle_api_url'] ?? null);
         UaaOracle::put(UaaOracle::INSPECTORS_KEY, $d['inspectors'] ?? null);
         UaaOracle::put('renewal_staff', $d['renewal_staff'] ?? null);
+        if (filled($d['portal_pin'] ?? null)) {
+            UaaOracle::put('move_portal_pin_hash', \Illuminate\Support\Facades\Hash::make($d['portal_pin']));
+            $this->data['portal_pin'] = null;
+        }
 
         Notification::make()->title('Settings saved')->success()->send();
     }
