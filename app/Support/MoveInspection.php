@@ -47,20 +47,18 @@ class MoveInspection
             'kitchen' => ['name' => 'Kitchen', 'sections' => [
                 ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Window', 'Door / Kitchen Cabinet']],
                 ['title' => 'Electric', 'items' => ['Socket / Switch', 'Light']],
-                ['title' => 'Kitchen Appliances', 'items' => ['Fridge / Gas Oven', 'Hood / Dishwasher', 'Washing Machine / Exhaust Fan']],
+                ['title' => 'Kitchen Appliances', 'items' => ['Fridge / Gas Oven', 'Hood / Dish Washers', 'Washing Machine / Exhaust Fan']],
             ]],
         ];
     }
 
-    /** Sum of charges on items that aren't Ok, plus 5% VAT. */
+    /** Sum of every charge entered (like the old form's calculated total), plus 5% VAT. */
     public static function totals(?array $rooms): array
     {
         $sub = 0.0;
         foreach ((array) $rooms as $room) {
             foreach ((array) ($room['items'] ?? []) as $item) {
-                if (($item['status'] ?? 'ok') !== 'ok') {
-                    $sub += (float) ($item['price'] ?? 0);
-                }
+                $sub += (float) ($item['price'] ?? 0);
             }
         }
         $vat = round($sub * self::VAT_RATE, 2);

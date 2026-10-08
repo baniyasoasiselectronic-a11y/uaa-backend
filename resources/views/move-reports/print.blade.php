@@ -9,7 +9,7 @@
     $charged = [];
     foreach ($saved as $rid => $room) {
         foreach ((array) ($room['items'] ?? []) as $it) {
-            if (($it['status'] ?? 'ok') !== 'ok') {
+            if (($it['status'] ?? 'ok') !== 'ok' || (float) ($it['price'] ?? 0) > 0) {
                 $charged[] = ['area' => $room['name'] ?? ucfirst($rid), 'label' => $it['label'] ?? '', 'status' => $it['status'], 'notes' => $it['notes'] ?? '', 'price' => (float) ($it['price'] ?? 0)];
             }
         }
@@ -93,7 +93,7 @@ tr.dmg td{background:#fdf1f1}tr.mnt td{background:#fdf7e8}
             <td>{{ ! empty($it['group']) ? $it['group'].' — ' : '' }}{{ $it['label'] ?? '' }}</td>
             <td><span class="st {{ $s }}">{{ MoveInspection::STATUSES[$s] ?? $s }}</span></td>
             <td>{{ $it['notes'] ?? '' }}</td>
-            <td class="r">{{ $s !== 'ok' && ($it['price'] ?? '') !== '' ? number_format((float) $it['price'], 2) : '' }}</td>
+            <td class="r">{{ ($it['price'] ?? '') !== '' ? number_format((float) $it['price'], 2) : '' }}</td>
           </tr>
           @php($urls = MoveReport::photoUrls($it['photos'] ?? []))
           @if(count($urls))
