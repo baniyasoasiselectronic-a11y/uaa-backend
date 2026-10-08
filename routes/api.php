@@ -92,3 +92,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('account/enquiries', [AccountController::class, 'enquiries'])->name('account.enquiries');
     Route::get('account/complaints', [AccountController::class, 'complaints'])->name('account.complaints');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Move In / Move Out inspection page (website: move-in-out) — password + token
+|--------------------------------------------------------------------------
+*/
+Route::post('inspection/login', [\App\Http\Controllers\Api\InspectionController::class, 'login'])->middleware('throttle:10,1');
+Route::post('inspection/ajax', [\App\Http\Controllers\Api\InspectionController::class, 'ajax'])->middleware('throttle:240,1');

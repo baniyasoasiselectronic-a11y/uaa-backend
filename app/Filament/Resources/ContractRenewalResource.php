@@ -27,7 +27,7 @@ class ContractRenewalResource extends Resource
     public static function form(Form $form): Form
     {
         $beds = ['Studio', '1 Bedroom', '2 Bedroom', '3 Bedroom', '4 Bedroom'];
-        $staff = UaaOracle::lines('renewal_staff');
+        $staff = UaaOracle::renewalStaff();
 
         return $form->schema([
             Forms\Components\Section::make('Tenancy')->columns(3)->schema([

@@ -1,84 +1,49 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\MoveReport;
+use App\Support\InspectionToken;
 use App\Support\MoveInspection;
 use App\Support\UaaOracle;
-use Filament\Facades\Filament;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Throwable;
 
 /**
- * Inspector-facing Move In / Move Out wizard (the same screens the old WordPress
- * plugin had): a PIN-protected page for inspectors on site, also open to signed-in
- * admins. The page's script talks to ajax() below with the same actions the old
- * plugin used, so the interface behaves exactly as before.
+ * API behind the website's Move In / Move Out inspection page (move-in-out).
+ * The page asks for the inspection password, receives a short-lived token and
+ * then calls ajax() with the same actions the old WordPress plugin used, so the
+ * old interface keeps working unchanged.
  */
-class InspectionPortalController extends Controller
+class InspectionController extends Controller
 {
-    public const PIN_KEY = 'move_portal_pin_hash';
-
-    private function isAdmin(Request $r): bool
+    public function login(Request $r): JsonResponse
     {
-        $u = $r->user();
-        try {
-            return $u && $u->canAccessPanel(Filament::getPanel('admin'));
-        } catch (Throwable) {
-            return false;
+        $expected = (string) config('inspection.password');
+        if ($expected === '') {
+            return response()->json(['success' => false, 'data' => 'The inspection password has not been set up on the server yet.'], 503);
         }
-    }
-
-    private function allowed(Request $r): bool
-    {
-        return $r->session()->get('move_portal_ok') === true || $this->isAdmin($r);
-    }
-
-    public function show(Request $r)
-    {
-        if (! $this->allowed($r)) {
-            return view('inspection.gate', ['hasPin' => (bool) UaaOracle::setting(self::PIN_KEY), 'error' => session('pin_error')]);
+        if (! hash_equals($expected, (string) $r->input('password'))) {
+            return response()->json(['success' => false, 'data' => 'The password is not correct.'], 401);
         }
 
-        return view('inspection.portal', [
-            'inspectors' => UaaOracle::inspectors(),
-            'isAdmin' => $this->isAdmin($r),
-        ]);
-    }
-
-    public function pin(Request $r)
-    {
-        $key = 'move-pin:'.$r->ip();
-        if (RateLimiter::tooManyAttempts($key, 8)) {
-            return redirect('/inspection')->with('pin_error', 'Too many attempts. Please wait a minute and try again.');
-        }
-        $hash = UaaOracle::setting(self::PIN_KEY);
-        if ($hash && Hash::check((string) $r->input('pin'), $hash)) {
-            RateLimiter::clear($key);
-            $r->session()->regenerate();
-            $r->session()->put('move_portal_ok', true);
-
-            return redirect('/inspection');
-        }
-        RateLimiter::hit($key, 60);
-
-        return redirect('/inspection')->with('pin_error', 'That PIN is not correct.');
+        return response()->json(['success' => true, 'data' => ['token' => InspectionToken::issue()]]);
     }
 
     public function ajax(Request $r): JsonResponse
     {
-        if (! $this->allowed($r)) {
-            return response()->json(['success' => false, 'data' => 'Not signed in. Reload the page and enter the PIN.'], 403);
+        if (! InspectionToken::valid($r->header('X-Inspection-Token'))) {
+            return response()->json(['success' => false, 'data' => 'Session expired. Please enter the password again.'], 401);
         }
         $action = $r->input('action', $r->query('action'));
 
         try {
             return match ($action) {
+                'uaa_mio_get_inspectors' => $this->ok(UaaOracle::inspectors()),
                 'uaa_mio_get_properties' => $this->ok(array_map(
                     fn ($id, $name) => ['id' => (string) $id, 'name' => $name],
                     array_keys(UaaOracle::properties()),

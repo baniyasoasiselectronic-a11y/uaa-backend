@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Models\Setting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Throwable;
@@ -11,44 +10,27 @@ use Throwable;
  * Read-only client for UAA's Oracle API (the same one the old WordPress
  * Move In/Out plugin used): buildings, units and unit types. Results are
  * cached for 10 minutes; if the API is unreachable everything returns empty
- * and the inspection form falls back to typing the values by hand.
+ * and the forms fall back to typing the values by hand.
  */
 class UaaOracle
 {
-    public const URL_KEY = 'move_oracle_api_url';
-
-    public const INSPECTORS_KEY = 'move_inspectors';
-
-    public static function setting(string $key, ?string $default = null): ?string
-    {
-        return Setting::where('key', $key)->value('value') ?? $default;
-    }
-
-    public static function put(string $key, ?string $value): void
-    {
-        Setting::updateOrCreate(['key' => $key], ['value' => $value, 'group' => 'move_in_out', 'type' => 'text']);
-        Cache::forget('oracle:/units/');
-        Cache::forget('oracle:/unit_type/');
-        Cache::forget('oracle:down');
-    }
-
     public static function baseUrl(): ?string
     {
-        $u = trim((string) self::setting(self::URL_KEY));
+        $u = (string) config('inspection.oracle_url');
 
         return $u !== '' ? rtrim($u, '/') : null;
     }
 
-    /** Values of a multi-line setting (one per line). */
-    public static function lines(string $key): array
-    {
-        return array_values(array_filter(array_map('trim', preg_split('/\R/', (string) self::setting($key)))));
-    }
-
-    /** Inspector names from Settings, one per line. */
+    /** Inspector names for the inspection page dropdown. */
     public static function inspectors(): array
     {
-        return self::lines(self::INSPECTORS_KEY);
+        return (array) config('inspection.inspectors');
+    }
+
+    /** "Renewed by" names for Contract Renewals. */
+    public static function renewalStaff(): array
+    {
+        return (array) config('inspection.renewal_staff');
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -127,7 +109,7 @@ class UaaOracle
         return $out;
     }
 
-    /** Oracle unit id for a property + unit no (kept on the report for reference). */
+    /** Oracle unit id for a property + unit no (kept on the record for reference). */
     public static function unitId(?string $propertyId, ?string $unitNo): ?string
     {
         foreach (self::fetch('/units/') as $u) {
@@ -155,30 +137,6 @@ class UaaOracle
     public static function available(): bool
     {
         return count(self::properties()) > 0;
-    }
-
-    /** Quick connectivity check for the Settings page (bypasses the cache). */
-    public static function test(): array
-    {
-        $base = self::baseUrl();
-        if (! $base) {
-            return [false, 'No API address saved yet.'];
-        }
-        try {
-            $h = ['ngrok-skip-browser-warning' => '1', 'Accept' => 'application/json'];
-            $units = Http::timeout(20)->withHeaders($h)->get($base.'/units/')->throw()->json();
-            $types = Http::timeout(20)->withHeaders($h)->get($base.'/unit_type/')->throw()->json();
-            if (! is_array($units) || ! is_array($types)) {
-                return [false, 'The address answered, but not with the expected data.'];
-            }
-            Cache::forget('oracle:/units/');
-            Cache::forget('oracle:/unit_type/');
-            $props = count(array_unique(array_column($units, 'PROPERTY_ID')));
-
-            return [true, count($units).' units in '.$props.' buildings, '.count($types).' unit types.'];
-        } catch (Throwable $e) {
-            return [false, 'Could not reach the API: '.$e->getMessage()];
-        }
     }
 
     private static function title(string $s): string
