@@ -27,6 +27,12 @@ class MoveInOutSettings extends Page implements HasForms
 
     protected static string $view = 'filament.pages.move-inout-settings';
 
+    /** Hidden from the admin menu — staff use the inspector page at /inspection instead. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public ?array $data = [];
 
     public function mount(): void

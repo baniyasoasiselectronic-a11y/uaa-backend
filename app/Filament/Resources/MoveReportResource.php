@@ -30,6 +30,12 @@ class MoveReportResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    /** Hidden from the admin menu — staff use the inspector page at /inspection instead. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     public static function form(Form $form): Form
     {
         $unitTypes = ['Apartment', 'Studio', 'Villa', 'Shop', 'Office', 'Other'];
