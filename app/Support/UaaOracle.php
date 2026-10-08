@@ -134,6 +134,39 @@ class UaaOracle
         return $out;
     }
 
+    /**
+     * Current tenant of a unit (name / email / mobile) from the Oracle API. Never cached —
+     * it is personal data and should always be the live value.
+     *
+     * @return array{name: string, email: string, phone: string}|null
+     */
+    public static function tenant(?string $propertyId, ?string $unitId): ?array
+    {
+        $base = self::baseUrl();
+        if (! $base || ! $propertyId || ! $unitId || Cache::has('oracle:down')) {
+            return null;
+        }
+        try {
+            $rows = Http::timeout(10)
+                ->withHeaders(['ngrok-skip-browser-warning' => '1', 'Accept' => 'application/json'])
+                ->get($base.'/get_user_data/', ['property_id' => $propertyId, 'unit_id' => $unitId])
+                ->throw()
+                ->json();
+        } catch (Throwable) {
+            return null;
+        }
+        $t = is_array($rows) ? ($rows[0] ?? null) : null;
+        if (! is_array($t) || blank($t['TENANT_NAME'] ?? null)) {
+            return null;
+        }
+
+        return [
+            'name' => trim((string) $t['TENANT_NAME']),
+            'email' => trim((string) ($t['EMAIL'] ?? '')),
+            'phone' => preg_replace('/[-\/\s]/', '', (string) ($t['MOBILE'] ?? '')),
+        ];
+    }
+
     public static function available(): bool
     {
         return count(self::properties()) > 0;

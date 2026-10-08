@@ -44,6 +44,11 @@ class InspectionController extends Controller
         try {
             return match ($action) {
                 'uaa_mio_get_inspectors' => $this->ok(UaaOracle::inspectors()),
+                'uaa_mio_get_structure' => $this->ok(array_map(
+                    fn ($id, $room) => ['id' => $id, 'name' => $room['name'], 'sections' => $room['sections']],
+                    array_keys(MoveInspection::rooms()),
+                    array_values(MoveInspection::rooms())
+                )),
                 'uaa_mio_get_properties' => $this->ok(array_map(
                     fn ($id, $name) => ['id' => (string) $id, 'name' => $name],
                     array_keys(UaaOracle::properties()),
@@ -54,8 +59,9 @@ class InspectionController extends Controller
                     UaaOracle::unitTypes()
                 ))),
                 'uaa_mio_get_units' => $this->ok(UaaOracle::unitRows((string) $r->input('property_id'))),
-                // Tenant details are typed in by the inspector for now.
-                'uaa_mio_get_tenant' => response()->json(['success' => false, 'data' => null]),
+                'uaa_mio_get_tenant' => ($t = UaaOracle::tenant((string) $r->input('property_id'), (string) $r->input('unit_id')))
+                    ? $this->ok($t)
+                    : response()->json(['success' => false, 'data' => null]),
                 'uaa_mio_upload_photo' => $this->upload($r),
                 'uaa_mio_save_report' => $this->save($r),
                 default => response()->json(['success' => false, 'data' => 'Unknown action'], 400),
@@ -107,7 +113,7 @@ class InspectionController extends Controller
     private function save(Request $r): JsonResponse
     {
         $p = $r->json()->all();
-        foreach (['tenant_name' => 'tenant name', 'unit_no' => 'unit', 'property_id' => 'property', 'inspector' => 'inspector', 'date' => 'date'] as $k => $label) {
+        foreach (['inspection_type' => 'inspection type', 'tenant_name' => 'tenant name', 'unit_no' => 'unit', 'property_id' => 'property', 'inspector' => 'inspector', 'date' => 'date'] as $k => $label) {
             if (blank($p[$k] ?? null)) {
                 return response()->json(['success' => false, 'data' => "Please fill in the {$label}."], 422);
             }
@@ -121,21 +127,23 @@ class InspectionController extends Controller
                 continue;
             }
             $rooms[$id] = [
+                'name' => $known[$id]['name'],
                 'items' => array_values(array_map(fn ($i) => [
+                    'group' => ! empty($i['group']) ? (string) $i['group'] : null,
                     'label' => (string) ($i['label'] ?? ''),
                     'status' => in_array($i['status'] ?? 'ok', ['ok', 'maintenance', 'damaged'], true) ? $i['status'] : 'ok',
                     'notes' => ($i['notes'] ?? '') !== '' ? (string) $i['notes'] : null,
                     'price' => ($i['price'] ?? '') !== '' ? (float) $i['price'] : null,
+                    'photos' => array_values(array_filter(array_map(
+                        fn ($u) => is_string($u) && $u !== '' ? $this->photoValue($u) : null,
+                        (array) ($i['photos'] ?? [])
+                    ))),
                 ], (array) ($room['items'] ?? []))),
-                'photos' => array_values(array_filter(array_map(
-                    fn ($ph) => ! empty($ph['url']) ? $this->photoValue((string) $ph['url']) : null,
-                    (array) ($room['photos'] ?? [])
-                ))),
             ];
         }
 
         $report = MoveReport::create(array_merge([
-            'type' => ($p['inspection_type'] ?? '') === 'Move Out' ? 'move_out' : 'move_in',
+            'type' => MoveInspection::TYPES[$p['inspection_type']] ?? 'move_in',
             'report_date' => $p['date'],
             'contract_no' => $p['contract_no'] ?? null,
             'oracle_property_id' => (string) $p['property_id'],

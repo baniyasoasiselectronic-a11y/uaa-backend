@@ -1,13 +1,16 @@
 @php
     use App\Models\MoveReport;
     use App\Support\MoveInspection;
-    $rooms = MoveInspection::rooms();
     $saved = (array) $r->rooms;
+    // the database returns JSON keys alphabetically — show rooms in walk-through order
+    $order = array_values(array_unique(array_merge(array_keys(MoveInspection::rooms()), array_keys($saved))));
+    $saved = array_merge(array_flip($order), $saved);
+    $saved = array_filter($saved, 'is_array');
     $charged = [];
-    foreach ($rooms as $rid => $room) {
-        foreach ((array) ($saved[$rid]['items'] ?? []) as $it) {
+    foreach ($saved as $rid => $room) {
+        foreach ((array) ($room['items'] ?? []) as $it) {
             if (($it['status'] ?? 'ok') !== 'ok') {
-                $charged[] = ['area' => $room['name'], 'label' => $it['label'] ?? '', 'status' => $it['status'], 'notes' => $it['notes'] ?? '', 'price' => (float) ($it['price'] ?? 0)];
+                $charged[] = ['area' => $room['name'] ?? ucfirst($rid), 'label' => $it['label'] ?? '', 'status' => $it['status'], 'notes' => $it['notes'] ?? '', 'price' => (float) ($it['price'] ?? 0)];
             }
         }
     }
@@ -76,28 +79,32 @@ tr.dmg td{background:#fdf1f1}tr.mnt td{background:#fdf7e8}
   </div>
 
   <h2>Room inspection</h2>
-  @foreach($rooms as $rid => $room)
-    @php($items = (array) ($saved[$rid]['items'] ?? []))
+  @foreach($saved as $rid => $room)
+    @php($items = (array) ($room['items'] ?? []))
     @continue(! count($items))
     <div class="room">
-      <h3>{{ $room['name'] }}</h3>
+      <h3>{{ $room['name'] ?? ucfirst($rid) }}</h3>
       <table>
-        <thead><tr><th style="width:30%">Item</th><th style="width:16%">Condition</th><th>Notes</th><th class="r" style="width:16%">Charge (AED)</th></tr></thead>
+        <thead><tr><th style="width:34%">Item</th><th style="width:14%">Condition</th><th>Notes</th><th class="r" style="width:15%">Charge (AED)</th></tr></thead>
         <tbody>
         @foreach($items as $it)
           @php($s = $it['status'] ?? 'ok')
           <tr class="{{ $s === 'damaged' ? 'dmg' : ($s === 'maintenance' ? 'mnt' : '') }}">
-            <td>{{ $it['label'] ?? '' }}</td>
+            <td>{{ ! empty($it['group']) ? $it['group'].' — ' : '' }}{{ $it['label'] ?? '' }}</td>
             <td><span class="st {{ $s }}">{{ MoveInspection::STATUSES[$s] ?? $s }}</span></td>
             <td>{{ $it['notes'] ?? '' }}</td>
             <td class="r">{{ $s !== 'ok' && ($it['price'] ?? '') !== '' ? number_format((float) $it['price'], 2) : '' }}</td>
           </tr>
+          @php($urls = MoveReport::photoUrls($it['photos'] ?? []))
+          @if(count($urls))
+            <tr><td colspan="4"><div class="photos">@foreach($urls as $u)<img src="{{ $u }}" alt="">@endforeach</div></td></tr>
+          @endif
         @endforeach
         </tbody>
       </table>
-      @php($urls = MoveReport::photoUrls($saved[$rid]['photos'] ?? []))
-      @if(count($urls))
-        <div class="photos">@foreach($urls as $u)<img src="{{ $u }}" alt="">@endforeach</div>
+      @php($roomUrls = MoveReport::photoUrls($room['photos'] ?? []))
+      @if(count($roomUrls))
+        <div class="photos">@foreach($roomUrls as $u)<img src="{{ $u }}" alt="">@endforeach</div>
       @endif
     </div>
   @endforeach

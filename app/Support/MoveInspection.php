@@ -3,46 +3,56 @@
 namespace App\Support;
 
 /**
- * Room / item checklist for Move In / Move Out inspections — the same ten
- * rooms and items the old WordPress "UAA Move In/Out" plugin used. Each saved
- * report stores its own copy of the labels, so editing this list never
- * changes old reports.
+ * Room / item checklist for Move In / Move Out inspections — the same rooms and
+ * items as the old uaa.ae/move-in-out form (Gravity Forms). Each saved report
+ * stores its own copy of the labels, so editing this list never changes old reports.
  */
 class MoveInspection
 {
     public const VAT_RATE = 0.05;
 
-    public const STATUSES = ['ok' => 'Good', 'maintenance' => 'Maintenance', 'damaged' => 'Damaged'];
+    public const STATUSES = ['ok' => 'Ok', 'maintenance' => 'Maintenance', 'damaged' => 'Damaged'];
 
-    /** @return array<string, array{name: string, items: list<string>}> */
+    public const TYPES = ['Move In' => 'move_in', 'Move Out' => 'move_out', 'Renewal' => 'renewal', 'Legal' => 'legal'];
+
+    /**
+     * Rooms in the order the inspector walks through them. Each room has sections;
+     * a section with a null title is the room's general items, the others are
+     * sub-headings (Electric, A/C, Sanitary…).
+     *
+     * @return array<string, array{name: string, sections: list<array{title: ?string, items: list<string>}>}>
+     */
     public static function rooms(): array
     {
-        $bed = ['Floor / Wall / Ceiling', 'Door / Window / Wardrobe', 'Switches / Sockets', 'Lights / Others', 'A/C Grill / Thermostat'];
-
         return [
-            'corridor' => ['name' => 'Corridor', 'items' => ['Floor / Wall', 'Ceiling / Door', 'Lights / Switches', 'Sockets / Ringing Bell']],
-            'sitting' => ['name' => 'Sitting Area / Living Room', 'items' => ['Floor / Wall', 'Ceiling / Windows', 'Lights / Sockets', 'Switches / Others', 'A/C Grill / Thermostat']],
-            'bedroom1' => ['name' => 'Bedroom 1', 'items' => $bed],
-            'bedroom2' => ['name' => 'Bedroom 2', 'items' => $bed],
-            'bedroom3' => ['name' => 'Bedroom 3', 'items' => $bed],
-            'toilet' => ['name' => 'Bathroom / Toilet', 'items' => ['Floor / Wall', 'Ceiling / Window / Door', 'WashBasin / Shower', 'WC / Bidet / Shataf', 'Shower Tray & Accessories', 'Shower Glass Door', 'Water Heater / Exhaust Fan', 'Electric / Lights']],
-            'kitchen' => ['name' => 'Kitchen', 'items' => ['Floor / Wall', 'Ceiling / Window', 'Door / Kitchen Cabinet', 'Socket / Switch', 'Lights', 'Fridge / Gas Oven', 'Hood / Dishwasher', 'Washing Machine / Exhaust Fan']],
-            'balcony' => ['name' => 'Balcony', 'items' => ['Floor / Wall', 'Railing / Glass', 'Light / Socket']],
-            'storeroom' => ['name' => 'Store Room / Laundry', 'items' => ['Floor / Wall', 'Door', 'Light / Socket']],
-            'common' => ['name' => 'Common Areas / Others', 'items' => ['Floor / Wall / Ceiling', 'Main Door / Windows', 'Lights / Sockets', 'A/C', 'Others']],
+            'corridor' => ['name' => 'Corridor', 'sections' => [
+                ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Door']],
+                ['title' => 'Electric', 'items' => ['Lights / Switches', 'Sockets / Ringing Bell']],
+            ]],
+            'sitting' => ['name' => 'Sitting Area', 'sections' => [
+                ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Windows']],
+                ['title' => 'Electric', 'items' => ['Lights / Sockets', 'Switches / Others']],
+            ]],
+            'bedroom' => ['name' => 'Bedroom', 'sections' => [
+                ['title' => null, 'items' => ['Floor / Wall / Ceiling', 'Door / Window / Wardrobe']],
+                ['title' => 'Electric', 'items' => ['Switches / Sockets', 'Lights / Others']],
+                ['title' => 'A/C', 'items' => ['Grill / Thermostat', 'Others']],
+            ]],
+            'toilet' => ['name' => 'Toilet', 'sections' => [
+                ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Window / Door']],
+                ['title' => 'Mixture', 'items' => ['Wash Basin / Shower', 'Shataf / P-day']],
+                ['title' => 'Sanitary', 'items' => ['Wash Basin / Counter', 'W/C & Shower Tray', 'Shower Glass Door', 'Accessory', 'Mirror', 'Water Heater / Exhaust Fan']],
+                ['title' => 'Electric', 'items' => ['Switch / Sockets', 'Lights / Mirror Lights', 'Others']],
+            ]],
+            'kitchen' => ['name' => 'Kitchen', 'sections' => [
+                ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Window', 'Door / Kitchen Cabinet']],
+                ['title' => 'Electric', 'items' => ['Socket / Switch', 'Light']],
+                ['title' => 'Kitchen Appliances', 'items' => ['Fridge / Gas Oven', 'Hood / Dishwasher', 'Washing Machine / Exhaust Fan']],
+            ]],
         ];
     }
 
-    /** Fresh checklist rows for one room: everything starts as Good. */
-    public static function defaultItems(string $roomId): array
-    {
-        return array_map(
-            fn (string $label) => ['label' => $label, 'status' => 'ok', 'notes' => null, 'price' => null],
-            self::rooms()[$roomId]['items'] ?? []
-        );
-    }
-
-    /** Sum of charges on items that aren't Good, plus 5% VAT. */
+    /** Sum of charges on items that aren't Ok, plus 5% VAT. */
     public static function totals(?array $rooms): array
     {
         $sub = 0.0;

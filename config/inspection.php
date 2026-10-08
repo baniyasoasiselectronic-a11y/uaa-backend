@@ -17,7 +17,7 @@ $list = fn (string $key, string $default) => array_values(array_filter(array_map
 
 return [
     'password' => env('INSPECTION_PASSWORD'),
-    'inspectors' => $list('INSPECTION_INSPECTORS', 'Jaseel'),
+    'inspectors' => $list('INSPECTION_INSPECTORS', 'Jaseel,Ranjan Kumar'),
     'oracle_url' => rtrim((string) env('INSPECTION_ORACLE_URL', 'https://gazelle-pleasant-anchovy.ngrok-free.app'), '/'),
     'renewal_staff' => $list('RENEWAL_STAFF', 'Yousaf,Lamis'),
     'token_hours' => 12,
