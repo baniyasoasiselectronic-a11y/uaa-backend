@@ -29,6 +29,17 @@ class ComplaintResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('ticket_number')
                     ->maxLength(255),
+                Forms\Components\TextInput::make('complaint_number')->label('Complaint number (old format)')->maxLength(60),
+                Forms\Components\TextInput::make('requisition_number')->label('Oracle requisition')->maxLength(60),
+                Forms\Components\TextInput::make('property_name')->maxLength(255),
+                Forms\Components\TextInput::make('unit_label')->label('Unit')->maxLength(60),
+                Forms\Components\DatePicker::make('visit_date')->label('Preferred visit date'),
+                Forms\Components\TextInput::make('visit_time_range')->label('Preferred visit time')->maxLength(60),
+                Forms\Components\Select::make('payment_status')
+                    ->options(['not_required' => 'Not required', 'unpaid' => 'Unpaid', 'paid' => 'Paid', 'free' => 'Free (no-fee tenant)'])
+                    ->default('not_required')->required(),
+                Forms\Components\TextInput::make('payment_amount')->numeric()->prefix('AED'),
+                Forms\Components\TextInput::make('payment_ref')->label('Payment reference')->maxLength(255),
                 Forms\Components\Select::make('customer_id')
                     ->relationship('customer', 'name'),
                 Forms\Components\TextInput::make('name')
@@ -62,9 +73,15 @@ class ComplaintResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('ticket_number')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('complaint_number')->label('Complaint no.')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('requisition_number')->label('Requisition')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('unit_label')->label('Unit')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('payment_status')->badge()
+                    ->color(fn (string $state) => match ($state) { 'paid' => 'success', 'unpaid' => 'danger', 'free' => 'info', default => 'gray' }),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
                     ->sortable(),
@@ -97,7 +114,10 @@ class ComplaintResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('payment_status')
+                    ->options(['not_required' => 'Not required', 'unpaid' => 'Unpaid', 'paid' => 'Paid', 'free' => 'Free']),
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(['new' => 'New', 'assigned' => 'Assigned', 'in_progress' => 'In progress', 'resolved' => 'Resolved', 'closed' => 'Closed']),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

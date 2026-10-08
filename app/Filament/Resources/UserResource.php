@@ -44,9 +44,14 @@ class UserResource extends Resource
                     ->maxLength(5)
                     ->default('en'),
                 Forms\Components\DateTimePicker::make('email_verified_at'),
+                Forms\Components\Toggle::make('complaint_fee_exempt')
+                    ->label('No complaint fee')
+                    ->helperText('Replaces the old WordPress trick of giving a tenant the Administrator role so their complaints were free.'),
                 Forms\Components\TextInput::make('password')
                     ->password()
-                    ->required()
+                    ->required(fn (string $operation) => $operation === 'create')
+                    ->dehydrated(fn ($state) => filled($state))
+                    ->helperText('Leave empty to keep the current password.')
                     ->maxLength(255),
             ]);
     }
@@ -61,8 +66,9 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('avatar')
-                    ->searchable(),
+                Tables\Columns\IconColumn::make('complaint_fee_exempt')
+                    ->label('No fee')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('locale')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email_verified_at')
@@ -78,7 +84,7 @@ class UserResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\TernaryFilter::make('complaint_fee_exempt')->label('No complaint fee'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

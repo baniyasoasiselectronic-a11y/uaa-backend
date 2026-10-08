@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Mail\MoveReportMail;
 use App\Models\MoveReport;
 use App\Support\InspectionToken;
 use App\Support\MoveInspection;
 use App\Support\UaaOracle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Throwable;
@@ -64,6 +67,8 @@ class InspectionController extends Controller
                     : response()->json(['success' => false, 'data' => null]),
                 'uaa_mio_upload_photo' => $this->upload($r),
                 'uaa_mio_save_report' => $this->save($r),
+                'uaa_mio_list_reports' => $this->listReports($r),
+                'uaa_mio_resend_report' => $this->resend($r),
                 default => response()->json(['success' => false, 'data' => 'Unknown action'], 400),
             };
         } catch (Throwable $e) {
@@ -164,9 +169,98 @@ class InspectionController extends Controller
             'inspector_signature' => $this->signature($p['inspector_signature'] ?? null),
         ], MoveInspection::totals($rooms)));
 
+        $sent = $this->mail($report);
+
         return $this->ok([
             'report_number' => $report->reference,
             'pdf_url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(60), ['moveReport' => $report->id, 'print' => 1]),
+            'emailed_to' => $sent,
         ]);
+    }
+
+    /** Tenant + inspector + office addresses for a report (extra address optional). */
+    private function recipients(MoveReport $report, ?string $extra = null): array
+    {
+        $list = array_merge(
+            [$report->tenant_email, config('inspection.inspector_emails')[$report->inspector] ?? null, $extra],
+            (array) config('inspection.notify_emails')
+        );
+
+        return array_values(array_unique(array_map('strtolower', array_filter($list, fn ($e) => is_string($e) && filter_var(trim($e), FILTER_VALIDATE_EMAIL)))));
+    }
+
+    /** Sends the report e-mail; a mail problem never stops the report from being saved. */
+    private function mail(MoveReport $report, ?string $extra = null): array
+    {
+        $to = $this->recipients($report, $extra);
+        if (! $to) {
+            return [];
+        }
+        try {
+            Mail::to($to)->send(new MoveReportMail($report));
+            $report->forceFill(['emailed_at' => now()])->save();
+
+            return $to;
+        } catch (Throwable $e) {
+            Log::error('Inspection report e-mail failed', ['report' => $report->id, 'error' => $e->getMessage()]);
+
+            return [];
+        }
+    }
+
+    private function listReports(Request $r): JsonResponse
+    {
+        $q = trim((string) $r->input('q'));
+        $query = MoveReport::query()->orderByDesc('report_date')->orderByDesc('id');
+        if ($q !== '') {
+            $like = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $q).'%';
+            $query->where(fn ($w) => $w->where('reference', 'like', $like)->orWhere('tenant_name', 'like', $like)
+                ->orWhere('unit_label', 'like', $like)->orWhere('property_name', 'like', $like)
+                ->orWhere('inspector', 'like', $like)->orWhere('tenant_phone', 'like', $like));
+        }
+        if (in_array($r->input('type'), array_keys(MoveReport::TYPES), true)) {
+            $query->where('type', $r->input('type'));
+        }
+        $page = $query->paginate(15, ['*'], 'page', max(1, (int) $r->input('page', 1)));
+
+        return $this->ok([
+            'total' => $page->total(),
+            'page' => $page->currentPage(),
+            'pages' => $page->lastPage(),
+            'items' => $page->getCollection()->map(fn (MoveReport $m) => [
+                'id' => $m->id,
+                'reference' => $m->reference,
+                'type' => $m->type,
+                'type_label' => $m->type_label,
+                'date' => $m->report_date?->format('d M Y'),
+                'property' => $m->property_name,
+                'unit' => $m->unit_label,
+                'tenant' => $m->tenant_name,
+                'tenant_email' => $m->tenant_email,
+                'inspector' => $m->inspector,
+                'total' => (float) $m->total_amount,
+                'emailed_at' => $m->emailed_at?->format('d M Y H:i'),
+                'imported' => (bool) $m->legacy_entry_id,
+                'url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(2), ['moveReport' => $m->id]),
+                'print_url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(2), ['moveReport' => $m->id, 'print' => 1]),
+            ])->values(),
+        ]);
+    }
+
+    private function resend(Request $r): JsonResponse
+    {
+        $report = MoveReport::find($r->input('id'));
+        if (! $report) {
+            return response()->json(['success' => false, 'data' => 'Report not found.'], 404);
+        }
+        $extra = trim((string) $r->input('to')) ?: null;
+        if ($extra && ! filter_var($extra, FILTER_VALIDATE_EMAIL)) {
+            return response()->json(['success' => false, 'data' => 'That e-mail address is not valid.'], 422);
+        }
+        $sent = $this->mail($report, $extra);
+
+        return $sent
+            ? $this->ok(['emailed_to' => $sent])
+            : response()->json(['success' => false, 'data' => 'No e-mail was sent. Add a tenant e-mail, set INSPECTION_NOTIFY_EMAILS, or type an address.'], 422);
     }
 }

@@ -10,6 +10,11 @@ class Complaint extends Model
 {
     protected $guarded = [];
 
+    protected $casts = [
+        'visit_date' => 'date',
+        'payment_amount' => 'decimal:2',
+    ];
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'customer_id');

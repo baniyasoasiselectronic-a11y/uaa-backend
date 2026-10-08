@@ -31,6 +31,8 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'avatar',
         'locale',
+        'complaint_fee_exempt',
+        'legacy_wp_id',
     ];
 
     protected $hidden = [
@@ -42,6 +44,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'complaint_fee_exempt' => 'boolean',
             'password' => 'hashed',
         ];
     }

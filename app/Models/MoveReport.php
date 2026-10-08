@@ -19,6 +19,7 @@ class MoveReport extends Model
 
     protected $casts = [
         'report_date' => 'date',
+        'emailed_at' => 'datetime',
         'rooms' => 'array',
         'subtotal' => 'decimal:2',
         'vat_amount' => 'decimal:2',
