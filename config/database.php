@@ -44,6 +44,21 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        // The OLD uaa.ae WordPress database, read-only, used only by the uaa:import-wp-* commands.
+        // Set WP_DB_* in .env (the values are in the old site's wp-config.php).
+        'wordpress' => [
+            'driver' => 'mysql',
+            'host' => env('WP_DB_HOST', '127.0.0.1'),
+            'port' => env('WP_DB_PORT', '3306'),
+            'database' => env('WP_DB_DATABASE'),
+            'username' => env('WP_DB_USERNAME'),
+            'password' => env('WP_DB_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => false,
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),

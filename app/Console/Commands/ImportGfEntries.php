@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\MoveReport;
 use App\Models\TechnicianReport;
 use App\Support\MoveInspection;
+use App\Support\WordPressSource;
 use Illuminate\Console\Command;
 
 /**
@@ -16,7 +17,7 @@ use Illuminate\Console\Command;
  */
 class ImportGfEntries extends Command
 {
-    protected $signature = 'uaa:import-gf-entries {file} {--form=move : move or technician} {--dry-run}';
+    protected $signature = 'uaa:import-gf-entries {file? : CSV/JSON export (not needed with --db)} {--db : read the old WordPress database (WP_DB_* in .env)} {--wp-path= : WordPress folder on this server, used with --db to embed the signature images} {--form=move : move or technician} {--dry-run}';
 
     protected $description = 'Import old Move in/out or Technician Gravity Forms entries';
 
@@ -38,13 +39,21 @@ class ImportGfEntries extends Command
     public function handle(): int
     {
         $file = (string) $this->argument('file');
-        if (preg_match('/\.csv$/i', $file)) {
+        if ($this->option('db')) {
+            try {
+                $entries = WordPressSource::entries($this->option('form') === 'technician' ? 4 : 3);
+            } catch (\Throwable $e) {
+                $this->error($e->getMessage());
+
+                return self::FAILURE;
+            }
+        } elseif (preg_match('/\.csv$/i', $file)) {
             $entries = $this->readCsv($file, $this->option('form') === 'technician' ? 'technician' : 'move');
         } else {
             $data = json_decode((string) @file_get_contents($file), true);
             $entries = is_array($data) && isset($data['entries']) ? $data['entries'] : $data;
         }
-        if (! is_array($entries)) {
+        if (! is_iterable($entries)) {
             $this->error('Could not read that file.');
 
             return self::FAILURE;
@@ -225,6 +234,18 @@ class ImportGfEntries extends Command
             return null;
         }
 
-        return str_starts_with($name, 'http') ? $name : 'https://uaa.ae/wp-content/uploads/gravity_forms/signatures/'.$name;
+        if (str_starts_with($name, 'http')) {
+            return $name;
+        }
+        // Read the signature picture from the old site's folder and store it inside the report,
+        // so it still shows after the old site is switched off.
+        if ($root = $this->option('wp-path')) {
+            $file = rtrim((string) $root, '/\\').'/wp-content/uploads/gravity_forms/signatures/'.basename($name);
+            if (is_file($file) && filesize($file) < 400000) {
+                return 'data:image/png;base64,'.base64_encode((string) file_get_contents($file));
+            }
+        }
+
+        return 'https://uaa.ae/wp-content/uploads/gravity_forms/signatures/'.basename($name);
     }
 }

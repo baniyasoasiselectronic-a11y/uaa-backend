@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\WordPressSource;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -16,17 +17,27 @@ use Illuminate\Support\Str;
  */
 class ImportWpUsers extends Command
 {
-    protected $signature = 'uaa:import-wp-users {file : JSON export of the WordPress users} {--dry-run} {--send-reset : e-mail every new tenant a password-reset link}';
+    protected $signature = 'uaa:import-wp-users {file? : JSON export of the WordPress users (not needed with --db)} {--db : read the old WordPress database (WP_DB_* in .env)} {--dry-run} {--send-reset : e-mail every new tenant a password-reset link}';
 
     protected $description = 'Import tenant accounts from the old uaa.ae WordPress site';
 
     public function handle(): int
     {
-        $rows = json_decode((string) @file_get_contents($this->argument('file')), true);
-        if (! is_array($rows)) {
-            $this->error('Could not read that file as a JSON list of users.');
+        if ($this->option('db')) {
+            try {
+                $rows = WordPressSource::users();
+            } catch (\Throwable $e) {
+                $this->error($e->getMessage());
 
-            return self::FAILURE;
+                return self::FAILURE;
+            }
+        } else {
+            $rows = json_decode((string) @file_get_contents((string) $this->argument('file')), true);
+            if (! is_array($rows)) {
+                $this->error('Could not read that file as a JSON list of users (or use --db).');
+
+                return self::FAILURE;
+            }
         }
 
         $created = $existing = $skipped = $exempt = 0;
