@@ -38,7 +38,7 @@ class ImportWpUsers extends Command
                 continue;
             }
             // Staff roles are created by hand in the new admin (different, safer roles).
-            if (array_intersect($roles, ['technician', 'web_designer', 'seo_manager', 'seo_editor', 'editor', 'author', 'contributor', 'uaa_inspector'])) {
+            if (array_intersect($roles, ['technician', 'css_js_designer', 'web_designer', 'seo_manager', 'seo_editor', 'editor', 'author', 'contributor', 'uaa_inspector'])) {
                 $skipped++;
                 $this->line("skipped staff-type account (create by hand if needed): {$email}");
                 continue;
