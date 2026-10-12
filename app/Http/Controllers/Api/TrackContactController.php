@@ -22,13 +22,40 @@ class TrackContactController extends Controller
     public function store(Request $request): JsonResponse
     {
         $d = $request->validate([
-            'type' => ['required', 'in:whatsapp,call,assistant'],
+            'type' => ['required', 'in:whatsapp,call,assistant,assistant_contact'],
             'page' => ['nullable', 'string', 'max:255'],
             'session' => ['nullable', 'string', 'max:64'],
             'text' => ['nullable', 'string', 'max:500'],
+            'name' => ['nullable', 'string', 'max:120'],
+            'phone' => ['nullable', 'string', 'max:30'],
         ]);
         $session = $d['session'] ?? null;
         $page = isset($d['page']) ? Str::limit(preg_replace('/[?#].*$/', '', $d['page']), 250, '') : null;
+
+        // A visitor chatting with the assistant chose to leave a name and number so the team can message them.
+        if ($d['type'] === 'assistant_contact') {
+            $name = trim(strip_tags((string) ($d['name'] ?? '')));
+            $phone = trim((string) ($d['phone'] ?? ''));
+            $digits = preg_replace('/\D+/', '', $phone);
+            if (mb_strlen($name) < 2 || strlen($digits) < 8 || strlen($digits) > 15 || ! $session) {
+                return response()->json(['message' => 'Please enter your name and a valid phone number.'], 422);
+            }
+            $enquiry = Enquiry::firstOrNew(['session_key' => $session, 'source' => 'ai_assistant']);
+            if (! $enquiry->exists) {
+                $enquiry->fill(['email' => null, 'page' => $page, 'message' => 'Chatted with the AI assistant.']);
+            }
+            $note = '✔ Left a name and number to be messaged on WhatsApp.';
+            $enquiry->name = $name;
+            $enquiry->phone = $phone;
+            $enquiry->status = 'new';
+            if (! str_contains((string) $enquiry->message, $note)) {
+                $enquiry->message = trim($enquiry->message."\n".$note);
+            }
+            $enquiry->save();
+            $enquiry->lead()->firstOrCreate([], ['name' => $name, 'email' => null, 'phone' => $phone, 'stage' => 'new']);
+
+            return response()->json(['ok' => true], 201);
+        }
 
         if ($d['type'] === 'assistant') {
             $text = trim(strip_tags((string) ($d['text'] ?? '')));
