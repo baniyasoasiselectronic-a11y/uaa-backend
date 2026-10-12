@@ -14,6 +14,12 @@ class TechnicianReportResource extends Resource
 {
     protected static ?string $model = TechnicianReport::class;
 
+    /** Hidden from the admin menu (not used on the new site); the data stays in the database. Remove this method to show it again. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
 
     protected static ?string $navigationGroup = 'Customer Care';

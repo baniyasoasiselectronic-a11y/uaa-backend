@@ -16,6 +16,12 @@ class ContractRenewalResource extends Resource
 {
     protected static ?string $model = ContractRenewal::class;
 
+    /** Hidden from the admin menu (not used on the new site); the data stays in the database. Remove this method to show it again. */
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';
 
     protected static ?string $navigationGroup = 'Customer Care';
