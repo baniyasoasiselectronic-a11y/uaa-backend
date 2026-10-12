@@ -51,6 +51,7 @@ Route::get('amenities', [LookupController::class, 'amenities'])->name('amenities
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('complaints/options', [ComplaintController::class, 'options'])->name('complaints.options');
     Route::get('complaints/units', [ComplaintController::class, 'units'])->name('complaints.units');
+    Route::post('track-contact', [\App\Http\Controllers\Api\TrackContactController::class, 'store'])->name('track-contact.store');
 });
 
 /*
