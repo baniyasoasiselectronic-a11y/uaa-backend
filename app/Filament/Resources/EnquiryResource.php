@@ -38,6 +38,37 @@ class EnquiryResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    /** WhatsApp number for an enquiry, in international form without "+" (UAE numbers get 971). Null if there is no usable phone. */
+    public static function whatsappNumber(?string $phone): ?string
+    {
+        $d = preg_replace('/\D+/', '', (string) $phone);
+        if (str_starts_with($d, '00')) {
+            $d = substr($d, 2);
+        }
+        if (str_starts_with($d, '0') && in_array(strlen($d), [9, 10], true)) {
+            $d = '971'.substr($d, 1);
+        } elseif (strlen($d) === 9 && str_starts_with($d, '5')) {
+            $d = '971'.$d;
+        }
+
+        return strlen($d) >= 10 && strlen($d) <= 15 ? $d : null;
+    }
+
+    /** Opens WhatsApp with a ready-to-send reply to this enquiry. */
+    public static function whatsappUrl(\App\Models\Enquiry $e): ?string
+    {
+        $n = self::whatsappNumber($e->phone);
+        if (! $n) {
+            return null;
+        }
+        $about = $e->property?->title ?: ($e->building?->name ?? null);
+        $first = trim(explode(' ', (string) $e->name)[0]);
+        $text = 'Hello '.($first ?: 'there').', this is United Arab Agencies. Thank you for your enquiry'
+            .($about ? ' about '.$about : '').'. How can we help you?';
+
+        return 'https://wa.me/'.$n.'?text='.rawurlencode($text);
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -85,7 +116,9 @@ class EnquiryResource extends Resource
                         'call_click' => 'warning', 'ai_call' => 'gray', default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('phone')->searchable()->placeholder('—'),
+                Tables\Columns\TextColumn::make('phone')->searchable()->placeholder('—')
+                    ->icon(fn ($record) => self::whatsappUrl($record) ? 'heroicon-o-chat-bubble-left-ellipsis' : null)->iconColor('success')
+                    ->url(fn ($record) => self::whatsappUrl($record), shouldOpenInNewTab: true),
                 Tables\Columns\TextColumn::make('email')->searchable()->placeholder('—')->toggleable(),
                 Tables\Columns\TextColumn::make('message')->limit(70)->wrap()->tooltip(fn ($record) => $record->message),
                 Tables\Columns\TextColumn::make('property.title')->label('Property')->toggleable(isToggledHiddenByDefault: true),
@@ -98,6 +131,12 @@ class EnquiryResource extends Resource
                 Tables\Filters\SelectFilter::make('status')->options(['new' => 'New', 'contacted' => 'Contacted', 'closed' => 'Closed']),
             ])
             ->actions([
+                Tables\Actions\Action::make('whatsapp')->label('WhatsApp')->icon('heroicon-o-chat-bubble-left-ellipsis')->color('success')
+                    ->visible(fn ($record) => self::whatsappUrl($record) !== null)
+                    ->url(fn ($record) => self::whatsappUrl($record), shouldOpenInNewTab: true),
+                Tables\Actions\Action::make('call')->label('Call')->icon('heroicon-o-phone')->color('gray')
+                    ->visible(fn ($record) => filled($record->phone))
+                    ->url(fn ($record) => 'tel:'.preg_replace('/[^\d+]/', '', (string) $record->phone)),
                 Tables\Actions\Action::make('contacted')->label('Mark contacted')->icon('heroicon-o-check')
                     ->visible(fn ($record) => $record->status === 'new')
                     ->action(fn ($record) => $record->update(['status' => 'contacted'])),
