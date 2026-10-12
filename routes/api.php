@@ -48,6 +48,10 @@ Route::get('careers/{slug}', [CareerController::class, 'show'])->name('careers.s
 Route::get('reviews', [\App\Http\Controllers\Api\ReviewController::class, 'index'])->name('reviews.index');
 Route::get('property-types', [LookupController::class, 'propertyTypes'])->name('property-types.index');
 Route::get('amenities', [LookupController::class, 'amenities'])->name('amenities.index');
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('complaints/options', [ComplaintController::class, 'options'])->name('complaints.options');
+    Route::get('complaints/units', [ComplaintController::class, 'units'])->name('complaints.units');
+});
 
 /*
 |--------------------------------------------------------------------------

@@ -23,9 +23,10 @@
                 <tr><td style="width:140px;color:#888">Name</td><td><strong>{{ $complaint->name }}</strong></td></tr>
                 <tr><td style="color:#888">Email</td><td><a href="mailto:{{ $complaint->email }}">{{ $complaint->email }}</a></td></tr>
                 <tr><td style="color:#888">Phone</td><td>{{ $complaint->phone ?: '—' }}</td></tr>
-                <tr><td style="color:#888">Property</td><td>{{ $complaint->property?->title ?? '—' }}</td></tr>
-                <tr><td style="color:#888">Unit</td><td>{{ $complaint->unit?->unit_number ?? '—' }}</td></tr>
-                <tr><td style="color:#888">Category</td><td>{{ $complaint->category ?: '—' }}</td></tr>
+                <tr><td style="color:#888">Building</td><td>{{ $complaint->property_name ?: ($complaint->property?->title ?? '—') }}</td></tr>
+                <tr><td style="color:#888">Unit</td><td>{{ $complaint->unit_label ?: ($complaint->unit?->unit_number ?? '—') }}@if($complaint->unit_type) ({{ $complaint->unit_type }})@endif</td></tr>
+                <tr><td style="color:#888">Complaint type</td><td>{{ $complaint->category ?: '—' }}</td></tr>
+                <tr><td style="color:#888">Preferred visit</td><td>{{ $complaint->visit_date?->format('d M Y') ?: '—' }}{{ $complaint->visit_time_range ? ', '.$complaint->visit_time_range : '' }}</td></tr>
               </table>
 
               <p style="margin:20px 0 6px;color:#888;font-size:13px;text-transform:uppercase;letter-spacing:.08em">Description</p>
