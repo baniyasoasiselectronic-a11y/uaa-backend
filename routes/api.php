@@ -38,6 +38,7 @@ Route::get('neighborhoods/{slug}', [NeighborhoodController::class, 'show'])->nam
 
 Route::get('news', [NewsController::class, 'index'])->name('news.index');
 Route::get('news/{slug}', [NewsController::class, 'show'])->name('news.show');
+Route::get('news/{slug}/comments', [\App\Http\Controllers\Api\NewsCommentController::class, 'index'])->name('news.comments.index');
 
 Route::get('open-houses', [OpenHouseController::class, 'index'])->name('open-houses.index');
 Route::get('open-houses/{slug}', [OpenHouseController::class, 'show'])->name('open-houses.show');
@@ -51,6 +52,7 @@ Route::get('amenities', [LookupController::class, 'amenities'])->name('amenities
 Route::middleware('throttle:60,1')->group(function () {
     Route::get('complaints/options', [ComplaintController::class, 'options'])->name('complaints.options');
     Route::get('complaints/units', [ComplaintController::class, 'units'])->name('complaints.units');
+    Route::post('news/{slug}/comments', [\App\Http\Controllers\Api\NewsCommentController::class, 'store'])->middleware('throttle:6,1')->name('news.comments.store');
     Route::post('track-contact', [\App\Http\Controllers\Api\TrackContactController::class, 'store'])->name('track-contact.store');
 });
 

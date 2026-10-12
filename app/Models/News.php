@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class News extends Model
@@ -20,6 +21,11 @@ class News extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(NewsCategory::class, 'news_category_id');
+    }
+
+    public function comments(): HasMany
+    {
+        return $this->hasMany(NewsComment::class);
     }
 
     public function author(): BelongsTo
