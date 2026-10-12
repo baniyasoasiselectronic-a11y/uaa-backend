@@ -55,8 +55,7 @@ class ContactRequestResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
-                    ->searchable(),
+                \App\Filament\Support\WhatsappReply::phoneColumn(fn ($r) => 'Thank you for contacting us'.($r->subject ? ' about "'.$r->subject.'"' : '').'. How can we help you?'),
                 Tables\Columns\TextColumn::make('subject')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status'),
@@ -73,6 +72,7 @@ class ContactRequestResource extends Resource
                 //
             ])
             ->actions([
+                ...\App\Filament\Support\WhatsappReply::tableActions(fn ($r) => 'Thank you for contacting us'.($r->subject ? ' about "'.$r->subject.'"' : '').'. How can we help you?'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([

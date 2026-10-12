@@ -54,8 +54,7 @@ class CallbackRequestResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('phone')
-                    ->searchable(),
+                \App\Filament\Support\WhatsappReply::phoneColumn(fn ($r) => 'Thank you for asking us to call you back. Is now a good time to talk?'),
                 Tables\Columns\TextColumn::make('preferred_time')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status'),
@@ -72,6 +71,7 @@ class CallbackRequestResource extends Resource
                 //
             ])
             ->actions([
+                ...\App\Filament\Support\WhatsappReply::tableActions(fn ($r) => 'Thank you for asking us to call you back. Is now a good time to talk?'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
