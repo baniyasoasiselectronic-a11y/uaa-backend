@@ -5,7 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\BuildingResource\Pages;
 use App\Filament\Resources\BuildingResource\RelationManagers;
 use App\Models\Building;
-use App\Support\UploadsToCloudinary;
+use App\Support\OptimizesUploadedImages;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -73,47 +73,75 @@ class BuildingResource extends Resource
                     ->numeric()
                     ->prefix('AED')
                     ->helperText('Shown publicly. Leave blank to auto-use the average of the units.'),
-                UploadsToCloudinary::apply(
+                OptimizesUploadedImages::apply(
                     Forms\Components\FileUpload::make('main_image')
                         ->label('Main image')
-                        ->image(),
-                    'building-images'
+                        ->image()
+                        ->directory('building-images')
                 ),
             ]);
     }
 
+    /** Cover photo URL: the main image, else the first gallery photo (links from the old site pass through). */
+    public static function coverUrl(Building $b): ?string
+    {
+        $path = $b->main_image ?: $b->images->first()?->path;
+        if (! $path) {
+            return null;
+        }
+
+        return str_starts_with($path, 'http') ? $path : \Illuminate\Support\Facades\Storage::url($path);
+    }
+
+    /** Buildings shown as a modern card gallery: cover photo, name, area, price, units and quick actions. */
     public static function table(Table $table): Table
     {
+        $placeholder = 'data:image/svg+xml;utf8,'.rawurlencode(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a2414"/><stop offset="1" stop-color="#0e0d09"/></linearGradient></defs><rect width="640" height="400" fill="url(#g)"/><g fill="none" stroke="#C9A227" stroke-width="3" opacity=".75"><path d="M250 300V120l70-28 70 28v180"/><path d="M290 300v-60h60v60M278 150h24M338 150h24M278 195h24M338 195h24"/></g></svg>'
+        );
+
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['community', 'images']))
+            ->defaultSort('name')
+            ->contentGrid(['md' => 2, 'xl' => 3, '2xl' => 4])
+            ->paginated([12, 24, 48])
+            ->defaultPaginationPageOption(12)
+            ->recordUrl(fn (Building $r) => static::getUrl('edit', ['record' => $r]))
             ->columns([
-                Tables\Columns\TextColumn::make('property.title')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('community.name')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('floors_count')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('year_built'),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\ImageColumn::make('cover')
+                        ->state(fn (Building $r) => static::coverUrl($r))
+                        ->defaultImageUrl($placeholder)
+                        ->width('100%')->height('12.5rem')->square(false)
+                        ->extraImgAttributes(['class' => 'uaa-cover', 'loading' => 'lazy', 'onerror' => "this.style.opacity=0"]),
+                    Tables\Columns\TextColumn::make('name')->searchable()->sortable()
+                        ->weight('bold')->size('lg')->extraAttributes(['class' => 'uaa-card-title']),
+                    Tables\Columns\TextColumn::make('community.name')->badge()->color('primary')
+                        ->icon('heroicon-m-map-pin')->placeholder('No area set'),
+                    Tables\Columns\TextColumn::make('average_price')
+                        ->state(fn (Building $r) => $r->average_price ? 'AED '.number_format((float) $r->average_price).' / year' : 'Price not set')
+                        ->extraAttributes(['class' => 'uaa-card-price']),
+                    Tables\Columns\Layout\Split::make([
+                        Tables\Columns\TextColumn::make('units_free')->icon('heroicon-m-key')->color('gray')
+                            ->state(fn (Building $r) => $r->units()->where('status', 'available')->count().' / '.$r->units()->count().' free')->tooltip('Available units / total units'),
+                        Tables\Columns\TextColumn::make('floors_count')->icon('heroicon-m-bars-3-bottom-left')->color('gray')
+                            ->state(fn (Building $r) => $r->floors_count ? $r->floors_count.' floors' : '—'),
+                        Tables\Columns\TextColumn::make('year_built')->icon('heroicon-m-calendar')->color('gray')
+                            ->state(fn (Building $r) => $r->year_built ?: '—'),
+                    ])->extraAttributes(['class' => 'uaa-card-stats']),
+                ])->space(3)->extraAttributes(['class' => 'uaa-building-card']),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('community_id')->label('Area')->relationship('community', 'name')->searchable()->preload(),
+                Tables\Filters\Filter::make('no_map')->label('Missing a map pin')->query(fn (Builder $q) => $q->whereNull('latitude')),
+                Tables\Filters\Filter::make('no_photo')->label('Missing photos')
+                    ->query(fn (Builder $q) => $q->whereNull('main_image')->whereDoesntHave('images')),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('map')->label('Map')->icon('heroicon-o-map-pin')->color('gray')
+                    ->visible(fn (Building $r) => $r->latitude !== null)
+                    ->url(fn (Building $r) => 'https://www.google.com/maps?q='.$r->latitude.','.$r->longitude, shouldOpenInNewTab: true),
+                Tables\Actions\EditAction::make()->label('Edit'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

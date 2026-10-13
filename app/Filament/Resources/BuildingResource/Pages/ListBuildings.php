@@ -10,6 +10,8 @@ class ListBuildings extends ListRecords
 {
     protected static string $resource = BuildingResource::class;
 
+    protected ?string $subheading = 'Your buildings as cards: photo, area, price and how many units are free. Click a card to edit it.';
+
     protected function getHeaderActions(): array
     {
         return [

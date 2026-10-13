@@ -133,3 +133,20 @@ html:not(.dark) .uaa-hero{color:#f3ede1}
 .dark .fi-topbar>nav,.dark .fi-topbar nav{background:transparent!important}
 .dark .fi-sidebar-nav{background:transparent!important}
 .dark .fi-sidebar>div:first-child{background:transparent!important}
+
+/* ---------- buildings: modern card gallery ---------- */
+.fi-ta-content-grid{gap:1.4rem!important;padding:1.1rem!important}
+.fi-ta-content-grid .fi-ta-record{border-radius:22px!important;overflow:hidden;transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s,border-color .35s;position:relative}
+.dark .fi-ta-content-grid .fi-ta-record{background:linear-gradient(180deg,#1a1812,#12110d)!important;border:1px solid var(--uaa-line)!important;--tw-ring-color:transparent!important;box-shadow:0 24px 50px -30px rgba(0,0,0,.95)}
+.fi-ta-content-grid .fi-ta-record:hover{transform:translateY(-6px);box-shadow:0 34px 60px -28px rgba(201,162,39,.35)!important;border-color:rgba(226,196,143,.5)!important}
+.fi-ta-content-grid .fi-ta-record .fi-ta-image{width:100%}
+.uaa-cover{width:100%!important;height:12.5rem!important;max-width:none!important;object-fit:cover;border-radius:16px!important;transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.fi-ta-record:hover .uaa-cover{transform:scale(1.04)}
+.fi-ta-record .fi-ta-image>div,.fi-ta-record .fi-ta-image{overflow:hidden;border-radius:16px}
+.uaa-card-title{font-family:var(--uaa-serif);font-size:1.5rem!important;font-weight:600!important;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+.uaa-card-price{font-family:var(--uaa-serif);font-size:1.25rem!important;font-weight:700;color:var(--uaa-gold-soft)}
+.uaa-card-stats{border-top:1px solid rgba(243,237,225,.08);padding-top:.7rem;font-size:.78rem}
+.fi-ta-content-grid .fi-ta-actions{border-top:1px solid rgba(243,237,225,.06);padding-top:.5rem}
+
+/* building cards: neat placeholder behind the photo (shows when a building has no photo or it cannot load) */
+.fi-ta-record .fi-ta-image{min-height:12.5rem;border-radius:16px;background:#14120c url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 24 24' fill='none' stroke='%23C9A227' stroke-width='.7' stroke-linecap='round' stroke-linejoin='round' opacity='.7'%3E%3Cpath d='M4 21V5l8-3 8 3v16'/%3E%3Cpath d='M9 21v-5h6v5M8 8h2M14 8h2M8 12h2M14 12h2'/%3E%3C/svg%3E") center/64px no-repeat;display:block}
