@@ -44,6 +44,11 @@ class UaaStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($openComplaints > 0 ? 'danger' : 'success'),
 
+            Stat::make('Move in/out reports', \App\Models\MoveReport::whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count())
+                ->description(\App\Models\MoveReport::whereDate('created_at', today())->count().' submitted today')
+                ->descriptionIcon('heroicon-m-clipboard-document-check')
+                ->color('success'),
+
             Stat::make('Open houses', OpenHouse::where('is_published', true)->count())
                 ->description('Published events')
                 ->descriptionIcon('heroicon-m-calendar-days')
