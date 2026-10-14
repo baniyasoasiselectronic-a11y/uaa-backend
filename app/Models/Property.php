@@ -15,6 +15,7 @@ class Property extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'completion_date' => 'date',
         'area_sqft' => 'decimal:2',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',

@@ -34,6 +34,8 @@ class PropertyResource extends JsonResource
             'is_featured' => (bool) $this->is_featured,
             'views' => $this->views,
             'published_at' => $this->published_at,
+            'completion_date' => $this->completion_date?->toDateString(),
+            'completion_label' => $this->completion_date?->format('F Y'),
             'community' => $this->whenLoaded('community', fn () => [
                 'id' => $this->community->id,
                 'name' => $this->community->name,

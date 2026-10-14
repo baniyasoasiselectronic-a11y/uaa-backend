@@ -61,6 +61,10 @@ class UpcomingProjectResource extends Resource
                     ])
                     ->default('coming_soon')
                     ->required(),
+                Forms\Components\DatePicker::make('completion_date')
+                    ->label('Expected completion')
+                    ->native(false)->displayFormat('F Y')
+                    ->helperText('Shown on the website instead of a price, e.g. "Completion: December 2026".'),
                 Forms\Components\Textarea::make('description')
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('price')
@@ -96,6 +100,7 @@ class UpcomingProjectResource extends Resource
                 Tables\Columns\TextColumn::make('title')->searchable(),
                 Tables\Columns\TextColumn::make('community.name')->label('Community'),
                 Tables\Columns\TextColumn::make('status')->badge(),
+                Tables\Columns\TextColumn::make('completion_date')->label('Completion')->date('F Y')->sortable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('price')->money('AED')->label('Starting Price')->sortable(),
                 Tables\Columns\IconColumn::make('is_featured')->boolean()->label('Featured'),
                 Tables\Columns\IconColumn::make('is_published')->boolean()->label('Published'),
