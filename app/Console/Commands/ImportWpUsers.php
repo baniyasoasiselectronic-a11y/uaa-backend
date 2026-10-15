@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 /**
- * Brings the old WordPress tenant accounts over. Passwords cannot be copied (they are
- * hashed differently), so every imported account gets a random password and the tenant
- * sets a new one through "Forgot password". Nothing is e-mailed unless --send-reset is given.
+ * Brings the old WordPress tenant accounts over. With --db each account also keeps its old password hash
+ * (users.wp_password_hash), so tenants sign in with the password they already have; the first successful
+ * sign-in swaps it for a normal hash. From a JSON file there is no hash, so the account gets a random
+ * password and the tenant uses "Forgot password". Nothing is e-mailed unless --send-reset is given.
  *
  * Input: the JSON from the WordPress REST users list (id, name, email, roles[]).
  */
@@ -58,8 +59,24 @@ class ImportWpUsers extends Command
             $isExempt = in_array('administrator', $roles, true);
 
             if ($user = User::where('email', $email)->first()) {
-                if (! $user->legacy_wp_id && ! $this->option('dry-run')) {
-                    $user->update(['legacy_wp_id' => $r['id'] ?? null]);
+                if (! $this->option('dry-run')) {
+                    if (! $user->legacy_wp_id) {
+                        $user->update(['legacy_wp_id' => $r['id'] ?? null]);
+                    }
+                    // fill the old login details once, never overwrite a password the tenant has since changed
+                    $fill = [];
+                    if (! $user->wp_login && ! empty($r['login'])) {
+                        $fill['wp_login'] = $r['login'];
+                    }
+                    if (! $user->wp_role && $roles) {
+                        $fill['wp_role'] = $roles[0];
+                    }
+                    if (! $user->wp_password_hash && ! empty($r['password_hash']) && $user->legacy_wp_id && $user->updated_at->eq($user->created_at)) {
+                        $fill['wp_password_hash'] = $r['password_hash'];
+                    }
+                    if ($fill) {
+                        $user->forceFill($fill)->save();
+                    }
                 }
                 $existing++;
                 continue;
@@ -78,6 +95,11 @@ class ImportWpUsers extends Command
                 'complaint_fee_exempt' => $isExempt,
                 'legacy_wp_id' => $r['id'] ?? null,
             ]);
+            $user->forceFill([
+                'wp_login' => $r['login'] ?? null,
+                'wp_role' => $roles[0] ?? null,
+                'wp_password_hash' => $r['password_hash'] ?? null,
+            ])->save();
             $created++;
             $exempt += $isExempt;
             if ($this->option('send-reset')) {

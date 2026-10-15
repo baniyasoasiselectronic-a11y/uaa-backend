@@ -38,6 +38,7 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'wp_password_hash',
     ];
 
     protected function casts(): array

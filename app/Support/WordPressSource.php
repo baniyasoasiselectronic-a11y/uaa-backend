@@ -35,7 +35,7 @@ class WordPressSource
         $cap = self::t('capabilities');
         $last = 0;
         while (true) {
-            $rows = $db->table(self::t('users'))->where('ID', '>', $last)->orderBy('ID')->limit(500)->get(['ID', 'user_email', 'display_name', 'user_login', 'user_registered']);
+            $rows = $db->table(self::t('users'))->where('ID', '>', $last)->orderBy('ID')->limit(500)->get(['ID', 'user_email', 'display_name', 'user_login', 'user_pass', 'user_registered']);
             if ($rows->isEmpty()) {
                 return;
             }
@@ -47,6 +47,8 @@ class WordPressSource
                     'name' => $r->display_name ?: $r->user_login,
                     'email' => $r->user_email,
                     'roles' => is_array($roles) ? array_keys(array_filter($roles)) : [],
+                    'login' => $r->user_login,
+                    'password_hash' => $r->user_pass,
                     'registered' => $r->user_registered,
                 ];
                 $last = (int) $r->ID;

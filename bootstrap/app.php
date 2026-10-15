@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // the old WordPress REST address space, kept for the mobile app
+            \Illuminate\Support\Facades\Route::middleware('api')->prefix('wp-json')->group(base_path('routes/wpjson.php'));
+        },
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Railway (and most PaaS hosts) terminate TLS at their edge proxy and
@@ -23,6 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*', 'wp-json/*'),
         );
     })->create();

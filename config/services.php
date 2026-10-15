@@ -48,6 +48,11 @@ return [
         'post_to_oracle' => (bool) env('ORACLE_POST_COMPLAINTS', true),
     ],
 
+    // Login token for the mobile app (/wp-json/*). Leave JWT_AUTH_SECRET_KEY empty to derive it from APP_KEY.
+    'jwt' => [
+        'secret' => env('JWT_AUTH_SECRET_KEY'),
+    ],
+
     // Text messages (D7 Networks, same provider as the old site). Nothing is sent until the token is set.
     'd7' => [
         'token' => env('D7_API_TOKEN'),
