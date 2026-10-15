@@ -44,6 +44,14 @@ return [
     // uaa.ae WordPress site's "complaints@uaa.ae" WP Mail SMTP setup).
     'complaints' => [
         'notify_email' => env('COMPLAINTS_NOTIFY_EMAIL', 'complaints@uaa.ae'),
+        // Send each complaint to UAA's Oracle system, as the old site did (false = only save it here)
+        'post_to_oracle' => (bool) env('ORACLE_POST_COMPLAINTS', true),
+    ],
+
+    // Text messages (D7 Networks, same provider as the old site). Nothing is sent until the token is set.
+    'd7' => [
+        'token' => env('D7_API_TOKEN'),
+        'sender' => env('D7_SENDER', 'UAA'),
     ],
 
 ];

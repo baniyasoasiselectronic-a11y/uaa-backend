@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ComplaintResource\Pages;
 use App\Filament\Resources\ComplaintResource\RelationManagers;
 use App\Models\Complaint;
+use App\Support\ComplaintOracle;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -31,6 +32,9 @@ class ComplaintResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('complaint_number')->label('Complaint number (old format)')->maxLength(60),
                 Forms\Components\TextInput::make('requisition_number')->label('Oracle requisition')->maxLength(60),
+                Forms\Components\Select::make('oracle_status')->label('Sent to Oracle')
+                    ->options(['posted' => 'Yes, Oracle has it', 'pending' => 'Not yet (retrying)', 'manual' => 'No, enter it in Oracle by hand'])
+                    ->helperText(fn (?Complaint $record) => $record?->oracle_last_error),
                 Forms\Components\TextInput::make('property_name')->maxLength(255),
                 Forms\Components\TextInput::make('unit_label')->label('Unit')->maxLength(60),
                 Forms\Components\DatePicker::make('visit_date')->label('Preferred visit date'),
@@ -79,6 +83,10 @@ class ComplaintResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('complaint_number')->label('Complaint no.')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('requisition_number')->label('Requisition')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('oracle_status')->label('Oracle')->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) { 'posted' => 'Sent', 'pending' => 'Retrying', 'manual' => 'Enter by hand', default => '—' })
+                    ->color(fn (?string $state) => match ($state) { 'posted' => 'success', 'pending' => 'warning', 'manual' => 'danger', default => 'gray' })
+                    ->tooltip(fn (Complaint $record) => $record->oracle_last_error),
                 Tables\Columns\TextColumn::make('unit_label')->label('Unit')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('payment_status')->badge()
                     ->color(fn (string $state) => match ($state) { 'paid' => 'success', 'unpaid' => 'danger', 'free' => 'info', default => 'gray' }),
@@ -116,10 +124,23 @@ class ComplaintResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->options(['not_required' => 'Not required', 'unpaid' => 'Unpaid', 'paid' => 'Paid', 'free' => 'Free']),
+                Tables\Filters\SelectFilter::make('oracle_status')->label('Oracle')
+                    ->options(['posted' => 'Sent', 'pending' => 'Retrying', 'manual' => 'Enter by hand']),
                 Tables\Filters\SelectFilter::make('status')
                     ->options(['new' => 'New', 'assigned' => 'Assigned', 'in_progress' => 'In progress', 'resolved' => 'Resolved', 'closed' => 'Closed']),
             ])
             ->actions([
+                Tables\Actions\Action::make('send_to_oracle')->label('Send to Oracle')->icon('heroicon-o-paper-airplane')->color('warning')
+                    ->visible(fn (Complaint $record) => in_array($record->oracle_status, ['pending', 'manual'], true))
+                    ->requiresConfirmation()
+                    ->modalDescription('Posts this complaint to Oracle now and e-mails the tenant their complaint number.')
+                    ->action(function (Complaint $record) {
+                        if (ComplaintOracle::submit($record)) {
+                            \Filament\Notifications\Notification::make()->title('Sent to Oracle')->body('Complaint number '.$record->fresh()->complaint_number)->success()->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()->title('Oracle did not take it')->body($record->fresh()->oracle_last_error)->danger()->send();
+                        }
+                    }),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
