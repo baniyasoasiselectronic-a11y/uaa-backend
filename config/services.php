@@ -53,6 +53,11 @@ return [
         'secret' => env('JWT_AUTH_SECRET_KEY'),
     ],
 
+    // Length of the e-mailed code in the app's "forgot password" (the old plugin used 8)
+    'password_reset' => [
+        'code_length' => (int) env('PASSWORD_RESET_CODE_LENGTH', 8),
+    ],
+
     // Text messages (D7 Networks, same provider as the old site). Nothing is sent until the token is set.
     'd7' => [
         'token' => env('D7_API_TOKEN'),
