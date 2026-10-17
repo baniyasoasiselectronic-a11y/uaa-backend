@@ -28,6 +28,11 @@ class TrackContactController extends Controller
             'text' => ['nullable', 'string', 'max:500'],
             'name' => ['nullable', 'string', 'max:120'],
             'phone' => ['nullable', 'string', 'max:30'],
+            // what the visitor told the assistant they are looking for (all optional)
+            'location' => ['nullable', 'string', 'max:80'],
+            'looking_for' => ['nullable', 'string', 'max:60'],
+            'move_in' => ['nullable', 'string', 'max:60'],
+            'note' => ['nullable', 'string', 'max:300'],
         ]);
         $session = $d['session'] ?? null;
         $page = isset($d['page']) ? Str::limit(preg_replace('/[?#].*$/', '', $d['page']), 250, '') : null;
@@ -50,6 +55,25 @@ class TrackContactController extends Controller
             $enquiry->status = 'new';
             if (! str_contains((string) $enquiry->message, $note)) {
                 $enquiry->message = trim($enquiry->message."\n".$note);
+            }
+
+            // preferred location, what they want and when, so the team can reply with the right units
+            $clean = fn (?string $v, int $max) => Str::limit(trim(preg_replace('/\s+/', ' ', strip_tags((string) $v))), $max, '');
+            $location = $clean($d['location'] ?? null, 80);
+            $lookingFor = $clean($d['looking_for'] ?? null, 60);
+            $moveIn = $clean($d['move_in'] ?? null, 60);
+            $extra = $clean($d['note'] ?? null, 300);
+            $details = array_filter([
+                $location !== '' ? '📍 Preferred location: '.$location : null,
+                $lookingFor !== '' ? '🏠 Looking for: '.$lookingFor : null,
+                $moveIn !== '' ? '📅 Wants to move: '.$moveIn : null,
+                $extra !== '' ? '💬 Note: '.$extra : null,
+            ]);
+            if ($details) {
+                // a second submit in the same chat replaces the earlier details instead of piling up
+                $msg = preg_replace('/\n?(📍 Preferred location|🏠 Looking for|📅 Wants to move|💬 Note): [^\n]*/u', '', (string) $enquiry->message);
+                $enquiry->message = trim($msg."\n".implode("\n", $details));
+                $enquiry->preferred_unit = Str::limit(trim(implode(' · ', array_filter([$location, $lookingFor]))), 250, '') ?: $enquiry->preferred_unit;
             }
             $enquiry->save();
             $enquiry->lead()->firstOrCreate([], ['name' => $name, 'email' => null, 'phone' => $phone, 'stage' => 'new']);
