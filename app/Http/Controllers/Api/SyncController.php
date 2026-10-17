@@ -110,7 +110,7 @@ class SyncController extends Controller
                 }
                 if (in_array($form, [3, 4], true) && is_array($e['entry'] ?? null)) {
                     $entry = $e['entry'] + ['id' => $entryId, 'status' => 'active'];
-                    $ok = $this->importGravityEntry($form === 4 ? 'technician' : 'move', $entry);
+                    $ok = $this->importGravityEntry($form === 4 ? 'technician' : 'move', $entry, ! empty($e['update']));
                     $ok ? $made++ : $skipped++;
                 } else {
                     $this->enquiryFromForm($form, $entryId, $e) ? $made++ : $skipped++;
@@ -125,7 +125,7 @@ class SyncController extends Controller
     }
 
     /** Runs the existing history importer on a single entry, so the field mapping is exactly the same. */
-    private function importGravityEntry(string $form, array $entry): bool
+    private function importGravityEntry(string $form, array $entry, bool $update = false): bool
     {
         $dir = storage_path('app/sync');
         if (! is_dir($dir)) {
@@ -134,7 +134,7 @@ class SyncController extends Controller
         $file = $dir.'/gf-'.Str::random(12).'.json';
         file_put_contents($file, json_encode(['entries' => [$entry]]));
         try {
-            Artisan::call('uaa:import-gf-entries', ['file' => $file, '--form' => $form]);
+            Artisan::call('uaa:import-gf-entries', ['file' => $file, '--form' => $form] + ($update ? ['--update' => true] : []));
             $output = Artisan::output();
         } finally {
             @unlink($file);

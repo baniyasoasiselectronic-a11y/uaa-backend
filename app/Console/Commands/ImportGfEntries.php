@@ -17,7 +17,7 @@ use Illuminate\Console\Command;
  */
 class ImportGfEntries extends Command
 {
-    protected $signature = 'uaa:import-gf-entries {file? : CSV/JSON export (not needed with --db)} {--db : read the old WordPress database (WP_DB_* in .env)} {--wp-path= : WordPress folder on this server, used with --db to embed the signature images} {--form=move : move or technician} {--dry-run}';
+    protected $signature = 'uaa:import-gf-entries {file? : CSV/JSON export (not needed with --db)} {--db : read the old WordPress database (WP_DB_* in .env)} {--wp-path= : WordPress folder on this server, used with --db to embed the signature images} {--form=move : move or technician} {--update : also update entries that were imported before (used when an entry is edited on the old site)} {--dry-run}';
 
     protected $description = 'Import old Move in/out or Technician Gravity Forms entries';
 
@@ -108,7 +108,8 @@ class ImportGfEntries extends Command
     private function move(array $e): bool
     {
         $id = (int) $e['id'];
-        if (MoveReport::where('legacy_entry_id', $id)->exists()) {
+        $existing = MoveReport::where('legacy_entry_id', $id)->first();
+        if ($existing && ! $this->option('update')) {
             return false;
         }
         $typeLabel = $this->v($e, 18) ?: 'Move In';
@@ -139,7 +140,7 @@ class ImportGfEntries extends Command
         if ($this->option('dry-run')) {
             return true;
         }
-        $r = new MoveReport(array_merge([
+        $attrs = array_merge([
             'legacy_entry_id' => $id,
             'type' => MoveInspection::TYPES[$typeLabel] ?? 'move_in',
             'report_date' => $date ?: now()->toDateString(),
@@ -157,7 +158,14 @@ class ImportGfEntries extends Command
             'rooms' => $rooms,
             'tenant_signature' => $this->signature($this->v($e, 16)),
             'inspector_signature' => $this->signature($this->v($e, 540)),
-        ], MoveInspection::totals($rooms)));
+        ], MoveInspection::totals($rooms));
+        if ($existing) { // edited on the old site: refresh the report; its reference, creation date and e-mail record stay
+            unset($attrs['legacy_entry_id']);
+            $existing->fill($attrs)->save();
+
+            return true;
+        }
+        $r = new MoveReport($attrs);
         $r->created_at = $e['date_created'] ?? now();
         $r->updated_at = $e['date_created'] ?? now();
         $r->save();
@@ -168,7 +176,8 @@ class ImportGfEntries extends Command
     private function technician(array $e): bool
     {
         $id = (int) $e['id'];
-        if (TechnicianReport::where('legacy_entry_id', $id)->exists()) {
+        $existing = TechnicianReport::where('legacy_entry_id', $id)->first();
+        if ($existing && ! $this->option('update')) {
             return false;
         }
         $raw = $this->v($e, 18);
@@ -191,14 +200,21 @@ class ImportGfEntries extends Command
         if ($this->option('dry-run')) {
             return true;
         }
-        $t = new TechnicianReport([
+        $tAttrs = [
             'legacy_entry_id' => $id,
             'technician_name' => $this->v($e, 3) ?: 'Technician',
             'technician_code' => $this->v($e, 17),
             'report_date' => $this->v($e, 16) ?: substr((string) ($e['date_created'] ?? now()), 0, 10),
             'entries' => $entries,
             'imported' => true,
-        ]);
+        ];
+        if ($existing) {
+            unset($tAttrs['legacy_entry_id']);
+            $existing->fill($tAttrs)->save();
+
+            return true;
+        }
+        $t = new TechnicianReport($tAttrs);
         $t->created_at = $e['date_created'] ?? now();
         $t->save();
 
