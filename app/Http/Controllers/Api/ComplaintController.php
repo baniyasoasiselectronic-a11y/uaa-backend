@@ -77,6 +77,7 @@ class ComplaintController extends Controller
 
         $data['ticket_number'] = 'UAA-'.strtoupper(Str::random(8));
         $data['payment_status'] = 'not_required';
+        $data['source'] = 'website';
         $data['payment_ref'] = 'FREE-'.time();
 
         if ($user = $request->user()) {

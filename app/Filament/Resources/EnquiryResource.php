@@ -23,6 +23,7 @@ class EnquiryResource extends Resource
         'whatsapp_click' => 'WhatsApp icon',
         'call_click' => 'Call icon',
         'ai_call' => 'AI phone call',
+        'gravity_form' => 'Old site form (Gravity)',
     ];
 
     protected static ?string $navigationIcon = 'heroicon-o-inbox-arrow-down';
@@ -113,7 +114,7 @@ class EnquiryResource extends Resource
                     ->formatStateUsing(fn (?string $state) => self::SOURCES[$state] ?? $state)
                     ->color(fn (?string $state) => match ($state) {
                         'website' => 'primary', 'ai_assistant' => 'info', 'whatsapp_click' => 'success',
-                        'call_click' => 'warning', 'ai_call' => 'gray', default => 'gray',
+                        'call_click' => 'warning', 'ai_call' => 'gray', 'gravity_form' => 'gray', default => 'gray',
                     }),
                 Tables\Columns\TextColumn::make('name')->searchable(),
                 Tables\Columns\TextColumn::make('phone')->searchable()->placeholder('—')

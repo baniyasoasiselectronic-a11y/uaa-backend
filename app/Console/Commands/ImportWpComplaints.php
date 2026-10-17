@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Complaint;
-use App\Models\User;
 use App\Support\WordPressSource;
+use App\Support\WpComplaintSync;
 use Illuminate\Console\Command;
 use XMLReader;
 
@@ -91,78 +90,11 @@ class ImportWpComplaints extends Command
 
     private function one(int $id, string $when, string $content, array $meta): void
     {
-        $message = trim(strip_tags($meta['complaint_message'] ?? $content));
-        $number = $this->token($meta['complaint_number'] ?? $meta['new_complain_number'] ?? null, 60);
-        $email = strtolower($this->t($meta['user_email'] ?? '', 250));
-        $email = filter_var($email, FILTER_VALIDATE_EMAIL) ? $email : '';
-        $pay = strtolower($this->t($meta['payment_status'] ?? '', 20));
-
-        $data = [
-            'ticket_number' => $number ?: null,
-            'complaint_number' => $number ?: null,
-            'requisition_number' => $this->token($meta['REQUISITION_NUMBER'] ?? null, 60),
-            'name' => $this->t($meta['user_name'] ?? '', 250) ?: 'Tenant (imported)',
-            'email' => $email ?: 'unknown@import.invalid',
-            'phone' => $this->t($meta['user_phone'] ?? '', 250) ?: null,
-            'oracle_property_id' => $this->t($meta['property_id'] ?? '', 50) ?: null,
-            'unit_type' => $this->t($meta['unit_type'] ?? '', 60) ?: null,
-            'unit_label' => $this->t($meta['unit_no'] ?? '', 60) ?: null,
-            'category' => $this->t($meta['complaint_type'] ?? '', 250) ?: null,
-            'description' => $message !== '' ? $message : '(no description)',
-            'status' => 'closed',
-            'priority' => 'medium',
-            'visit_date' => $this->date($meta['availability_date'] ?? null),
-            'visit_time_range' => $this->t($meta['availability_time_range'] ?? '', 60) ?: null,
-            'payment_status' => in_array($pay, ['paid', 'unpaid', 'free'], true) ? $pay : 'not_required',
-            'payment_ref' => $this->t($meta['payment_intent_id'] ?? '', 250) ?: null,
-        ];
-
-        if ($this->option('dry-run')) {
-            $this->new++;
-
-            return;
-        }
-        $existing = Complaint::where('legacy_wp_id', $id)->first();
-        if ($data['ticket_number'] && Complaint::where('ticket_number', $data['ticket_number'])->where('legacy_wp_id', '!=', $id)->exists()) {
-            $data['ticket_number'] .= '-'.$id;
-        }
-        if ($email && ($u = User::where('email', $email)->first())) {
-            $data['customer_id'] = $u->id;
-        }
-        if ($existing) {
-            $existing->update($data);
+        [$result] = WpComplaintSync::upsert($id, $when, $content, $meta, 'closed', (bool) $this->option('dry-run'));
+        if ($result === 'updated') {
             $this->updated++;
-
-            return;
+        } else {
+            $this->new++;
         }
-        $c = new Complaint($data + ['legacy_wp_id' => $id]);
-        $c->created_at = $when ?: now();
-        $c->updated_at = $when ?: now();
-        $c->save();
-        $this->new++;
-    }
-
-    /** Plain text, no tags (the old app sometimes saved a PHP error message), cut to the column size. */
-    private function t(mixed $v, int $max): string
-    {
-        return mb_substr(trim(preg_replace('/\s+/', ' ', strip_tags((string) $v))), 0, $max);
-    }
-
-    /** A number/code such as 59444 or BR82558AC: keep the leading code, drop anything after it. */
-    private function token(mixed $v, int $max): ?string
-    {
-        $v = $this->t(preg_replace('/<.*/s', '', (string) $v), 400);
-
-        return preg_match('/^[A-Za-z0-9][A-Za-z0-9\-\/_.]*/', $v, $m) ? mb_substr($m[0], 0, $max) : null;
-    }
-
-    private function date(?string $d): ?string
-    {
-        if (! $d) {
-            return null;
-        }
-        $t = strtotime($d);
-
-        return $t ? date('Y-m-d', $t) : null;
     }
 }

@@ -2,17 +2,17 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use App\Support\WordPressSource;
+use App\Support\WpUserSync;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
 
 /**
  * Brings the old WordPress tenant accounts over. With --db each account also keeps its old password hash
  * (users.wp_password_hash), so tenants sign in with the password they already have; the first successful
  * sign-in swaps it for a normal hash. From a JSON file there is no hash, so the account gets a random
  * password and the tenant uses "Forgot password". Nothing is e-mailed unless --send-reset is given.
+ * (The live copy of new sign-ups and password changes comes from the old site through /api/sync/user.)
  *
  * Input: the JSON from the WordPress REST users list (id, name, email, roles[]).
  */
@@ -43,70 +43,23 @@ class ImportWpUsers extends Command
 
         $created = $existing = $skipped = $exempt = 0;
         foreach ($rows as $r) {
-            $email = strtolower(trim((string) ($r['email'] ?? '')));
-            $roles = array_map('strtolower', (array) ($r['roles'] ?? []));
-            if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            [$result, $user] = WpUserSync::upsert($r, (bool) $this->option('dry-run'));
+            if ($result === 'skipped_staff') {
                 $skipped++;
-                continue;
-            }
-            // Staff roles are created by hand in the new admin (different, safer roles).
-            if (array_intersect($roles, ['technician', 'css_js_designer', 'web_designer', 'seo_manager', 'seo_editor', 'editor', 'author', 'contributor', 'uaa_inspector'])) {
+                $this->line('skipped staff-type account (create by hand if needed): '.strtolower((string) ($r['email'] ?? '')));
+            } elseif ($result === 'skipped_email') {
                 $skipped++;
-                $this->line("skipped staff-type account (create by hand if needed): {$email}");
-                continue;
-            }
-            // The old site used the Administrator role to make a tenant's complaints free.
-            $isExempt = in_array('administrator', $roles, true);
-
-            if ($user = User::where('email', $email)->first()) {
-                if (! $this->option('dry-run')) {
-                    if (! $user->legacy_wp_id) {
-                        $user->update(['legacy_wp_id' => $r['id'] ?? null]);
-                    }
-                    // fill the old login details once, never overwrite a password the tenant has since changed
-                    $fill = [];
-                    if (! $user->wp_login && ! empty($r['login'])) {
-                        $fill['wp_login'] = $r['login'];
-                    }
-                    if (! $user->wp_role && $roles) {
-                        $fill['wp_role'] = $roles[0];
-                    }
-                    if (! $user->wp_password_hash && ! empty($r['password_hash']) && $user->legacy_wp_id && $user->updated_at->eq($user->created_at)) {
-                        $fill['wp_password_hash'] = $r['password_hash'];
-                    }
-                    if ($fill) {
-                        $user->forceFill($fill)->save();
-                    }
-                }
+            } elseif ($result === 'updated' || ($result === 'dry' && $user)) {
                 $existing++;
-                continue;
-            }
-            if ($this->option('dry-run')) {
+            } else { // created, or a dry run for a new account
                 $created++;
-                $exempt += $isExempt;
-                continue;
-            }
-            $user = User::create([
-                'name' => trim((string) ($r['name'] ?? '')) ?: Str::before($email, '@'),
-                'email' => $email,
-                'password' => Str::random(40),
-                'phone' => $r['phone'] ?? null,
-                'locale' => 'en',
-                'complaint_fee_exempt' => $isExempt,
-                'legacy_wp_id' => $r['id'] ?? null,
-            ]);
-            $user->forceFill([
-                'wp_login' => $r['login'] ?? null,
-                'wp_role' => $roles[0] ?? null,
-                'wp_password_hash' => $r['password_hash'] ?? null,
-            ])->save();
-            $created++;
-            $exempt += $isExempt;
-            if ($this->option('send-reset')) {
-                try {
-                    Password::sendResetLink(['email' => $user->email]);
-                } catch (\Throwable $e) {
-                    $this->warn("reset mail failed for {$email}: ".$e->getMessage());
+                $exempt += in_array('administrator', array_map('strtolower', (array) ($r['roles'] ?? [])), true);
+                if ($user && $this->option('send-reset')) {
+                    try {
+                        Password::sendResetLink(['email' => $user->email]);
+                    } catch (\Throwable $e) {
+                        $this->warn("reset mail failed for {$user->email}: ".$e->getMessage());
+                    }
                 }
             }
         }

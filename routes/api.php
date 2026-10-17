@@ -107,3 +107,16 @@ Route::middleware('auth:sanctum')->group(function () {
 */
 Route::post('inspection/login', [\App\Http\Controllers\Api\InspectionController::class, 'login'])->middleware('throttle:10,1');
 Route::post('inspection/ajax', [\App\Http\Controllers\Api\InspectionController::class, 'ajax'])->middleware('throttle:240,1');
+
+/*
+|--------------------------------------------------------------------------
+| Live copy from the old WordPress site (complaints + payments, app sign-ups,
+| Gravity Forms entries). Needs the shared key in the X-Sync-Key header.
+|--------------------------------------------------------------------------
+*/
+Route::prefix('sync')->middleware(['throttle:300,1', \App\Http\Middleware\VerifySyncKey::class])->group(function () {
+    Route::get('ping', [\App\Http\Controllers\Api\SyncController::class, 'ping']);
+    Route::post('complaints', [\App\Http\Controllers\Api\SyncController::class, 'complaints']);
+    Route::post('users', [\App\Http\Controllers\Api\SyncController::class, 'users']);
+    Route::post('entries', [\App\Http\Controllers\Api\SyncController::class, 'entries']);
+});

@@ -83,6 +83,9 @@ class ComplaintResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('complaint_number')->label('Complaint no.')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('requisition_number')->label('Requisition')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('source')->label('Came from')->badge()
+                    ->formatStateUsing(fn (?string $state) => match ($state) { 'website' => 'New website', 'wordpress' => 'Old site / app', default => '—' })
+                    ->color(fn (?string $state) => match ($state) { 'website' => 'primary', 'wordpress' => 'gray', default => 'gray' }),
                 Tables\Columns\TextColumn::make('oracle_status')->label('Oracle')->badge()
                     ->formatStateUsing(fn (?string $state) => match ($state) { 'posted' => 'Sent', 'pending' => 'Retrying', 'manual' => 'Enter by hand', default => '—' })
                     ->color(fn (?string $state) => match ($state) { 'posted' => 'success', 'pending' => 'warning', 'manual' => 'danger', default => 'gray' })
@@ -90,6 +93,8 @@ class ComplaintResource extends Resource
                 Tables\Columns\TextColumn::make('unit_label')->label('Unit')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('payment_status')->badge()
                     ->color(fn (string $state) => match ($state) { 'paid' => 'success', 'unpaid' => 'danger', 'free' => 'info', default => 'gray' }),
+                Tables\Columns\TextColumn::make('payment_amount')->label('Paid (AED)')->numeric(2)->placeholder('—')->toggleable(),
+                Tables\Columns\TextColumn::make('payment_ref')->label('Payment ref')->placeholder('—')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('customer.name')
                     ->numeric()
                     ->sortable(),
@@ -124,6 +129,7 @@ class ComplaintResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->options(['not_required' => 'Not required', 'unpaid' => 'Unpaid', 'paid' => 'Paid', 'free' => 'Free']),
+                Tables\Filters\SelectFilter::make('source')->label('Came from')->options(['website' => 'New website', 'wordpress' => 'Old site / Flutter app']),
                 Tables\Filters\SelectFilter::make('oracle_status')->label('Oracle')
                     ->options(['posted' => 'Sent', 'pending' => 'Retrying', 'manual' => 'Enter by hand']),
                 Tables\Filters\SelectFilter::make('status')

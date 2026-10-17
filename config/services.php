@@ -48,6 +48,12 @@ return [
         'post_to_oracle' => (bool) env('ORACLE_POST_COMPLAINTS', true),
     ],
 
+    // Shared key the old WordPress site uses to push new complaints / sign-ups / forms here (/api/sync/*).
+    // Leave WP_SYNC_KEY empty to keep the sync switched off.
+    'wp_sync' => [
+        'key' => env('WP_SYNC_KEY'),
+    ],
+
     // Login token for the mobile app (/wp-json/*). Leave JWT_AUTH_SECRET_KEY empty to derive it from APP_KEY.
     'jwt' => [
         'secret' => env('JWT_AUTH_SECRET_KEY'),
