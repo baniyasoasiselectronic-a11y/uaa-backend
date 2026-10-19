@@ -35,7 +35,13 @@ class MailTest extends Command
 
             return self::FAILURE;
         }
-        $this->info($mailer === 'smtp' ? 'Sent. Check the inbox (and the spam folder) of '.$this->argument('to').'.' : 'Done (see the warning above).');
+        if ($mailer === 'sendmail') {
+            $this->info('Handed to the server's own mail system. Check the inbox AND the spam folder of '.$this->argument('to').' in the next minute or two.');
+        } elseif ($mailer === 'smtp') {
+            $this->info('Sent. Check the inbox (and the spam folder) of '.$this->argument('to').'.');
+        } else {
+            $this->info('Done (see the warning above).');
+        }
 
         return self::SUCCESS;
     }
