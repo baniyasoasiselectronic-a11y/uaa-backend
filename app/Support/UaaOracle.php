@@ -42,7 +42,7 @@ class UaaOracle
         }
 
         try {
-            return Cache::remember('oracle:'.$path, 600, function () use ($base, $path) {
+            return Cache::remember('oracle:'.$path, 3600, function () use ($base, $path) {
                 $json = Http::timeout(12)
                     ->withHeaders(['ngrok-skip-browser-warning' => '1', 'Accept' => 'application/json'])
                     ->get($base.$path)
