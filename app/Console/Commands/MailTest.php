@@ -36,7 +36,7 @@ class MailTest extends Command
             return self::FAILURE;
         }
         if ($mailer === 'sendmail') {
-            $this->info('Handed to the server's own mail system. Check the inbox AND the spam folder of '.$this->argument('to').' in the next minute or two.');
+            $this->info('Handed to this server mail system. Check the inbox AND the spam folder of '.$this->argument('to').' in the next minute or two.');
         } elseif ($mailer === 'smtp') {
             $this->info('Sent. Check the inbox (and the spam folder) of '.$this->argument('to').'.');
         } else {
