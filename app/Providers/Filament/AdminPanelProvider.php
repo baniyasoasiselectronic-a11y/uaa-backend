@@ -32,6 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->passwordReset()
             ->brandName('United Arab Agencies')
             ->brandLogo(asset('images/logo.webp'))
             ->darkModeBrandLogo(asset('images/logo.webp'))
