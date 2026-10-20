@@ -23,7 +23,13 @@ class PropertyListResource extends JsonResource
             'bathrooms' => $this->bathrooms,
             'area_sqft' => $this->area_sqft,
             'address' => $this->address,
-            'main_image' => $this->main_image ? \App\Support\Img::optimize(Storage::url($this->main_image)) : null,
+            // admin uploads are stored as full Cloudinary addresses: pass those through (Storage::url would turn them into
+            // ".../storage/https://res.cloudinary.com/..." and the photo would not load)
+            'main_image' => $this->main_image
+                ? \App\Support\Img::optimize(
+                    preg_match('#^(https?:)?//|^/#', $this->main_image) ? $this->main_image : Storage::url($this->main_image)
+                )
+                : null,
             'is_featured' => (bool) $this->is_featured,
             'community' => $this->whenLoaded('community', fn () => [
                 'id' => $this->community->id,
