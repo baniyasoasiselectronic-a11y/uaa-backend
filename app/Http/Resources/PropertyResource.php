@@ -119,6 +119,6 @@ class PropertyResource extends JsonResource
 
     private function url(string $path): string
     {
-        return Str::startsWith($path, ['http://', 'https://', '/']) ? $path : Storage::url($path);
+        return \App\Support\Img::optimize(Str::startsWith($path, ['http://', 'https://', '/']) ? $path : Storage::url($path));
     }
 }

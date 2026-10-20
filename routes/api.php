@@ -23,35 +23,37 @@ use Illuminate\Support\Facades\Route;
 | Public read endpoints
 |--------------------------------------------------------------------------
 */
-Route::get('properties', [PropertyController::class, 'index'])->name('properties.index');
-Route::get('properties/featured', [PropertyController::class, 'featured'])->name('properties.featured');
-Route::get('properties/{slug}', [PropertyController::class, 'show'])->name('properties.show');
+Route::middleware(\App\Http\Middleware\CachePublicApi::class)->group(function () {
+    Route::get('properties', [PropertyController::class, 'index'])->name('properties.index');
+    Route::get('properties/featured', [PropertyController::class, 'featured'])->name('properties.featured');
+    Route::get('properties/{slug}', [PropertyController::class, 'show'])->name('properties.show');
 
-Route::get('communities', [CommunityController::class, 'index'])->name('communities.index');
-Route::get('communities/{slug}', [CommunityController::class, 'show'])->name('communities.show');
+    Route::get('communities', [CommunityController::class, 'index'])->name('communities.index');
+    Route::get('communities/{slug}', [CommunityController::class, 'show'])->name('communities.show');
 
-Route::get('buildings', [BuildingController::class, 'index'])->name('buildings.index');
-Route::get('buildings/{slug}', [BuildingController::class, 'show'])->name('buildings.show');
+    Route::get('buildings', [BuildingController::class, 'index'])->name('buildings.index');
+    Route::get('buildings/{slug}', [BuildingController::class, 'show'])->name('buildings.show');
 
-Route::get('neighborhoods', [NeighborhoodController::class, 'index'])->name('neighborhoods.index');
-Route::get('neighborhoods/{slug}', [NeighborhoodController::class, 'show'])->name('neighborhoods.show');
+    Route::get('neighborhoods', [NeighborhoodController::class, 'index'])->name('neighborhoods.index');
+    Route::get('neighborhoods/{slug}', [NeighborhoodController::class, 'show'])->name('neighborhoods.show');
 
-Route::get('news', [NewsController::class, 'index'])->name('news.index');
-Route::get('news/{slug}', [NewsController::class, 'show'])->name('news.show');
+    Route::get('news', [NewsController::class, 'index'])->name('news.index');
+    Route::get('news/{slug}', [NewsController::class, 'show'])->name('news.show');
+
+    Route::get('open-houses', [OpenHouseController::class, 'index'])->name('open-houses.index');
+    Route::get('open-houses/{slug}', [OpenHouseController::class, 'show'])->name('open-houses.show');
+
+    Route::get('careers', [CareerController::class, 'index'])->name('careers.index');
+    Route::get('careers/{slug}', [CareerController::class, 'show'])->name('careers.show');
+});
 Route::get('news/{slug}/comments', [\App\Http\Controllers\Api\NewsCommentController::class, 'index'])->name('news.comments.index');
-
-Route::get('open-houses', [OpenHouseController::class, 'index'])->name('open-houses.index');
-Route::get('open-houses/{slug}', [OpenHouseController::class, 'show'])->name('open-houses.show');
-
-Route::get('careers', [CareerController::class, 'index'])->name('careers.index');
-Route::get('careers/{slug}', [CareerController::class, 'show'])->name('careers.show');
 
 Route::get('reviews', [\App\Http\Controllers\Api\ReviewController::class, 'index'])->name('reviews.index');
 Route::get('property-types', [LookupController::class, 'propertyTypes'])->name('property-types.index');
 Route::get('amenities', [LookupController::class, 'amenities'])->name('amenities.index');
 Route::middleware('throttle:60,1')->group(function () {
-    Route::get('complaints/options', [ComplaintController::class, 'options'])->name('complaints.options');
-    Route::get('complaints/units', [ComplaintController::class, 'units'])->name('complaints.units');
+    Route::get('complaints/options', [ComplaintController::class, 'options'])->middleware(\App\Http\Middleware\CachePublicApi::class)->name('complaints.options');
+    Route::get('complaints/units', [ComplaintController::class, 'units'])->middleware(\App\Http\Middleware\CachePublicApi::class)->name('complaints.units');
     Route::post('news/{slug}/comments', [\App\Http\Controllers\Api\NewsCommentController::class, 'store'])->middleware('throttle:6,1')->name('news.comments.store');
     Route::post('track-contact', [\App\Http\Controllers\Api\TrackContactController::class, 'store'])->name('track-contact.store');
 });
