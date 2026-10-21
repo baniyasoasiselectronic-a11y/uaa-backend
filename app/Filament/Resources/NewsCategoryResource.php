@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class NewsCategoryResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = NewsCategory::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-group';

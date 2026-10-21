@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ContactRequestResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = ContactRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-envelope';

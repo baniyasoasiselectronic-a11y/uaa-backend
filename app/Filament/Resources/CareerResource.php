@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CareerResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = Career::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';

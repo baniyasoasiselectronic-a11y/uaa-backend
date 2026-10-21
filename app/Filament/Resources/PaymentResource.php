@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class PaymentResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = Complaint::class;
 
     protected static ?string $slug = 'payments';

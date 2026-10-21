@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Collection;
  */
 class NewsCommentResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = NewsComment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';

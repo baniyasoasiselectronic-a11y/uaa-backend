@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class JobApplicationResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = JobApplication::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';

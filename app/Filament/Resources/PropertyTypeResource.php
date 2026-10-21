@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PropertyTypeResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = PropertyType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';

@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 
 class TechnicianReportResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = TechnicianReport::class;
 
     /** Hidden from the admin menu (not used on the new site); the data stays in the database. Remove this method to show it again. */

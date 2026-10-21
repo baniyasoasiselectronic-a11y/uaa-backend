@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ListWithUsRequestResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = ListWithUsRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-home-modern';

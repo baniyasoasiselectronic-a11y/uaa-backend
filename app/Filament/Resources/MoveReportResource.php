@@ -18,6 +18,8 @@ use Illuminate\Support\Facades\URL;
  */
 class MoveReportResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = MoveReport::class;
 
     protected static ?string $slug = 'move-reports';

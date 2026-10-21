@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class UpcomingProjectResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = Property::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';

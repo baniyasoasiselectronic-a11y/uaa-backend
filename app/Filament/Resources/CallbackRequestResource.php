@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CallbackRequestResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = CallbackRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-phone';

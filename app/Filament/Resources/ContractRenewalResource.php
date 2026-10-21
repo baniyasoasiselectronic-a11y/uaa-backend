@@ -14,6 +14,8 @@ use Filament\Tables\Table;
 
 class ContractRenewalResource extends Resource
 {
+    use \App\Filament\Concerns\RestrictedByRole;
+
     protected static ?string $model = ContractRenewal::class;
 
     /** Hidden from the admin menu (not used on the new site); the data stays in the database. Remove this method to show it again. */
