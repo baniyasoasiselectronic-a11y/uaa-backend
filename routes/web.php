@@ -19,8 +19,10 @@ Route::get('/move-reports/{moveReport}/pdf', function (\App\Models\MoveReport $m
         return redirect()->to(\Illuminate\Support\Facades\URL::temporarySignedRoute('move-reports.public', now()->addDay(), ['moveReport' => $moveReport->id, 'print' => 1]));
     }
 
+    $name = \App\Support\MoveReportFiles::pdfName($moveReport);
+
     return response($pdf, 200, [
         'Content-Type' => 'application/pdf',
-        'Content-Disposition' => 'inline; filename="'.\App\Support\MoveReportFiles::pdfName($moveReport).'"',
+        'Content-Disposition' => 'inline; filename="'.\Illuminate\Support\Str::ascii($name).'"; filename*=UTF-8\'\''.rawurlencode($name),
     ]);
 })->middleware(['web', 'signed'])->name('move-reports.pdf');

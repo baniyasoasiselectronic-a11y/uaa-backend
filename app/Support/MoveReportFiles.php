@@ -25,9 +25,23 @@ class MoveReportFiles
         return class_exists(\Dompdf\Dompdf::class);
     }
 
+    /** "Building - Unit - Move Out Report": what people see when they download, save or forward the PDF. */
+    public static function baseName(MoveReport $r): string
+    {
+        $parts = array_filter([
+            trim((string) ($r->property_name ?: $r->property?->title)),
+            trim((string) $r->unit_label),
+            $r->type_label.' Report',
+        ], fn ($p) => $p !== '');
+        // no characters that file systems or mail headers dislike
+        $name = trim(preg_replace('/\s+/', ' ', preg_replace('/[\\\\\/:*?"<>|\x00-\x1F]+/u', ' ', implode(' - ', $parts))));
+
+        return $name !== '' ? $name : $r->reference;
+    }
+
     public static function pdfName(MoveReport $r): string
     {
-        return $r->reference.'.pdf';
+        return self::baseName($r).'.pdf';
     }
 
     /** The report as PDF bytes, or null when dompdf is missing or rendering failed. */

@@ -26,7 +26,7 @@
 <head>
 <meta charset="utf-8">
 @unless($pdf)<meta name="viewport" content="width=device-width,initial-scale=1">@endunless
-<title>{{ $r->reference }} — {{ $r->type_label }} Report</title>
+<title>{{ \App\Support\MoveReportFiles::baseName($r) }}</title>
 <style>
 @page{margin:14mm 12mm}
 body{font-family:{!! $pdf ? "'DejaVu Sans'" : 'Arial,Helvetica,sans-serif' !!},sans-serif;color:#1a1a1a;margin:0;background:{{ $pdf ? '#fff' : '#eee' }};font-size:{{ $pdf ? '9pt' : '12.5px' }}}
