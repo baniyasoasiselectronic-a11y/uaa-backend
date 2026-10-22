@@ -6,6 +6,11 @@ Akasya West brings 41 one and two bedroom apartments to Warsan Fourth, Internati
 - Total built-up area: **4,429.85 sq m** (47,682.51 sq ft)
 - Apartment types: **1 BHK and 2 BHK**
 
+## Facilities
+- Separate ladies' and gents' gyms on the 1st floor
+- A private balcony or terrace for every apartment, with large terraces on the 7th floor
+- Two lifts and two staircases serving every floor
+
 ## Floor by floor
 | Floor | Apartments | Mix | Total area |
 |---|---|---|---|

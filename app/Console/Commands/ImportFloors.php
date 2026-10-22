@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Amenity;
 use App\Models\Property;
 use Cloudinary\Cloudinary;
 use Illuminate\Console\Command;
@@ -22,7 +23,8 @@ class ImportFloors extends Command
     protected $signature = 'uaa:import-floors {slug : Property slug, e.g. akasya-east}
                             {--replace : Delete the property\'s existing floors first}
                             {--dry-run : Show what would be imported without uploading or saving}
-                            {--description-only : Only update the project description from description.md}';
+                            {--description-only : Only update the project description from description.md}
+                            {--amenities-only : Only set the project amenities from the manifest "amenities" list}';
 
     protected $description = 'Import floors and apartment types for a project from its manifest';
 
@@ -49,14 +51,19 @@ class ImportFloors extends Command
         $descPath = "{$dir}/description.md";
         $description = is_file($descPath) ? trim(file_get_contents($descPath)) : null;
 
-        if ($this->option('description-only')) {
-            if (! $description) {
-                $this->error("No description.md found at {$descPath}");
+        if ($this->option('description-only') || $this->option('amenities-only')) {
+            if ($this->option('description-only')) {
+                if (! $description) {
+                    $this->error("No description.md found at {$descPath}");
 
+                    return self::FAILURE;
+                }
+                $property->update(['description' => $description]);
+                $this->info("Description updated for {$property->title}.");
+            }
+            if ($this->option('amenities-only') && ! $this->syncAmenities($property, (array) ($manifest['amenities'] ?? []))) {
                 return self::FAILURE;
             }
-            $property->update(['description' => $description]);
-            $this->info("Description updated for {$property->title}.");
 
             return self::SUCCESS;
         }
@@ -154,8 +161,33 @@ class ImportFloors extends Command
             ]);
         });
 
+        if (! empty($manifest['amenities']) && ! $this->syncAmenities($property, $manifest['amenities'])) {
+            return self::FAILURE;
+        }
+
         $this->info('Done. Open the project page to see the floor explorer.');
 
         return self::SUCCESS;
+    }
+
+    /** Replaces the project's amenities with the named ones (they must already exist in Amenities). */
+    private function syncAmenities(Property $property, array $names): bool
+    {
+        if (! $names) {
+            $this->error('The manifest has no "amenities" list.');
+
+            return false;
+        }
+        $found = Amenity::whereIn('name', $names)->get();
+        $missing = array_values(array_diff($names, $found->pluck('name')->all()));
+        if ($missing) {
+            $this->error('These amenities do not exist yet (add them under Amenities in the admin first): '.implode(', ', $missing));
+
+            return false;
+        }
+        $property->amenities()->sync($found->pluck('id')->all());
+        $this->info("Amenities for {$property->title}: ".implode(', ', $names).'.');
+
+        return true;
     }
 }

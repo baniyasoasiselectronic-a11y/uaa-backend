@@ -2,6 +2,14 @@
   "property": "akasya-west",
   "total_apartments": 41,
   "built_up_sqm": 4429.85,
+  "amenities": [
+    "Gym",
+    "CCTV",
+    "Balcony",
+    "Central AC",
+    "Parking",
+    "Security"
+  ],
   "floors": [
     {
       "label": "1st Floor",
