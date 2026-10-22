@@ -121,6 +121,25 @@ class MoveReportFiles
         foreach ($list as $i => $p) {
             $res = $responses[(string) $i] ?? null;
             $ok = $res instanceof \Illuminate\Http\Client\Response && $res->successful() && $res->body() !== '';
+            if (! $ok) {
+                // the mail-sized copy can be refused or still be generating — try the original photo once
+                try {
+                    $second = Http::timeout(30)->get($p['url']);
+                    if ($second->successful() && $second->body() !== '') {
+                        $res = $second;
+                        $ok = true;
+                    }
+                } catch (Throwable $e) {
+                    // logged below
+                }
+            }
+            if (! $ok) {
+                Log::warning('Inspection report photo could not be fetched', [
+                    'report' => $r->id,
+                    'url' => $p['url'],
+                    'status' => $res instanceof \Illuminate\Http\Client\Response ? $res->status() : 'no response',
+                ]);
+            }
             $size = $ok ? strlen($res->body()) : 0;
             if (! $ok || count($files) >= self::MAX_PHOTOS || $total + $size > self::MAX_PHOTO_BYTES) {
                 $skipped[] = $p;
