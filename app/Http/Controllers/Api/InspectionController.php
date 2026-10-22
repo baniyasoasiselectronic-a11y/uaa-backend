@@ -7,6 +7,7 @@ use App\Mail\MoveReportMail;
 use App\Models\MoveReport;
 use App\Support\InspectionToken;
 use App\Support\MoveInspection;
+use App\Support\MoveReportFiles;
 use App\Support\UaaOracle;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -173,39 +174,66 @@ class InspectionController extends Controller
 
         return $this->ok([
             'report_number' => $report->reference,
-            'pdf_url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(60), ['moveReport' => $report->id, 'print' => 1]),
+            'pdf_url' => $this->pdfLink($report, 60),
             'emailed_to' => $sent,
         ]);
     }
 
-    /** Tenant + inspector + office addresses for a report (extra address optional). */
-    private function recipients(MoveReport $report, ?string $extra = null): array
+    /** Link to the report as a real PDF (or the printable page when dompdf is not installed). */
+    private function pdfLink(MoveReport $report, int $days): string
     {
-        $list = array_merge(
-            [$report->tenant_email, config('inspection.inspector_emails')[$report->inspector] ?? null, $extra],
-            (array) config('inspection.notify_emails')
-        );
-
-        return array_values(array_unique(array_map('strtolower', array_filter($list, fn ($e) => is_string($e) && filter_var(trim($e), FILTER_VALIDATE_EMAIL)))));
+        return MoveReportFiles::pdfAvailable()
+            ? URL::temporarySignedRoute('move-reports.pdf', now()->addDays($days), ['moveReport' => $report->id])
+            : URL::temporarySignedRoute('move-reports.public', now()->addDays($days), ['moveReport' => $report->id, 'print' => 1]);
     }
 
-    /** Sends the report e-mail; a mail problem never stops the report from being saved. */
+    private function cleanEmails(array $list): array
+    {
+        return array_values(array_unique(array_map(fn ($e) => strtolower(trim($e)), array_filter($list, fn ($e) => is_string($e) && filter_var(trim($e), FILTER_VALIDATE_EMAIL)))));
+    }
+
+    /**
+     * Who gets the report: ['photos' => addresses that also get the photos attached,
+     * 'others' => tenant + inspector + office addresses (PDF and photo links only)].
+     */
+    private function recipients(MoveReport $report, ?string $extra = null): array
+    {
+        $photos = $this->cleanEmails((array) config('inspection.photo_emails'));
+        $others = $this->cleanEmails(array_merge(
+            [$report->tenant_email, config('inspection.inspector_emails')[$report->inspector] ?? null, $extra],
+            (array) config('inspection.notify_emails')
+        ));
+
+        return ['photos' => $photos, 'others' => array_values(array_diff($others, $photos))];
+    }
+
+    /**
+     * Sends the report e-mails: the engineering / web-dev addresses get the PDF with every photo attached,
+     * everybody else the PDF with photo links. A mail problem never stops the report from being saved,
+     * and one failing message does not stop the other.
+     */
     private function mail(MoveReport $report, ?string $extra = null): array
     {
-        $to = $this->recipients($report, $extra);
-        if (! $to) {
-            return [];
+        $groups = $this->recipients($report, $extra);
+        $pdf = MoveReportFiles::pdf($report);
+        $sent = [];
+
+        foreach (['others' => false, 'photos' => true] as $group => $withPhotos) {
+            if (! $groups[$group]) {
+                continue;
+            }
+            try {
+                Mail::to($groups[$group])->send(new MoveReportMail($report, $withPhotos, $pdf));
+                $sent = array_merge($sent, $groups[$group]);
+            } catch (Throwable $e) {
+                Log::error('Inspection report e-mail failed', ['report' => $report->id, 'group' => $group, 'error' => $e->getMessage()]);
+            }
         }
-        try {
-            Mail::to($to)->send(new MoveReportMail($report));
+        if ($sent) {
             $report->forceFill(['emailed_at' => now()])->save();
-
-            return $to;
-        } catch (Throwable $e) {
-            Log::error('Inspection report e-mail failed', ['report' => $report->id, 'error' => $e->getMessage()]);
-
-            return [];
         }
+
+        return $sent;
     }
 
     private function listReports(Request $r): JsonResponse
@@ -242,7 +270,7 @@ class InspectionController extends Controller
                 'emailed_at' => $m->emailed_at?->format('d M Y H:i'),
                 'imported' => (bool) $m->legacy_entry_id,
                 'url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(2), ['moveReport' => $m->id]),
-                'print_url' => URL::temporarySignedRoute('move-reports.public', now()->addDays(2), ['moveReport' => $m->id, 'print' => 1]),
+                'print_url' => $this->pdfLink($m, 2),
             ])->values(),
         ]);
     }

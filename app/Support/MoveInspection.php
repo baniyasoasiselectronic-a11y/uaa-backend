@@ -40,8 +40,10 @@ class MoveInspection
             ]],
             'toilet' => ['name' => 'Toilet', 'sections' => [
                 ['title' => null, 'items' => ['Floor / Wall', 'Ceiling / Window / Door']],
-                ['title' => 'Mixture', 'items' => ['Wash Basin / Shower', 'Shataf / P-day']],
-                ['title' => 'Sanitary', 'items' => ['Wash Basin / Counter', 'W/C & Shower Tray', 'Shower Glass Door', 'Accessory', 'Mirror', 'Water Heater / Exhaust Fan']],
+                // 2026-10-22: "Shataf / P-day" and "W/C & Shower Tray" were split across two fields. Now: one "W/C / P-day" field
+                // and one "Accessory (Shataf & Shower Tray)" field (Shataf and Shower Tray moved into the Accessory field).
+                ['title' => 'Mixture', 'items' => ['Wash Basin / Shower']],
+                ['title' => 'Sanitary', 'items' => ['Wash Basin / Counter', 'W/C / P-day', 'Shower Glass Door', 'Accessory (Shataf & Shower Tray)', 'Mirror', 'Water Heater / Exhaust Fan']],
                 ['title' => 'Electric', 'items' => ['Switch / Sockets', 'Lights / Mirror Lights', 'Others']],
             ]],
             'kitchen' => ['name' => 'Kitchen', 'sections' => [

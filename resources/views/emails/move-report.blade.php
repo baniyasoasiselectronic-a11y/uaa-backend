@@ -18,8 +18,16 @@
             <tr><td style="color:#888">Inspected by</td><td>{{ $report->inspector }}</td></tr>
             <tr><td style="color:#888">Charges to tenant</td><td><strong>AED {{ number_format((float) $report->total_amount, 2) }}</strong> <span style="color:#888">(incl. 5% VAT)</span></td></tr>
           </table>
-          <p style="margin:24px 0 0"><a href="{{ $link }}" style="display:inline-block;background:#C9A227;color:#17120a;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:6px">Open the full report</a></p>
-          <p style="margin:14px 0 0;font-size:12px;color:#888">The report opens in your browser. To keep a PDF copy choose Print → Save as PDF. The link stays valid for 60 days.</p>
+          <p style="margin:24px 0 0"><a href="{{ $hasPdf ? $pdfLink : $link }}" style="display:inline-block;background:#C9A227;color:#17120a;text-decoration:none;font-weight:bold;padding:12px 22px;border-radius:6px">{{ $hasPdf ? 'Download the PDF report' : 'Open the full report' }}</a>@if($hasPdf) &nbsp; <a href="{{ $link }}" style="color:#7a5b00;font-size:13px">View in browser</a>@endif</p>
+          <p style="margin:14px 0 0;font-size:12px;color:#888">
+            @if($hasPdf)The report is attached as a PDF.@else The report opens in your browser; to keep a PDF copy choose Print → Save as PDF.@endif
+            @if($withPhotos && $attachedCount) {{ $attachedCount }} inspection photo{{ $attachedCount === 1 ? '' : 's' }} {{ $attachedCount === 1 ? 'is' : 'are' }} attached.@endif
+            The links stay valid for 60 days.
+          </p>
+          @if(count($notAttached))
+            <p style="margin:16px 0 4px;font-size:13px;color:#444"><strong>{{ count($notAttached) }} photo{{ count($notAttached) === 1 ? '' : 's' }} could not be attached</strong> (size limit) — open them here:</p>
+            <p style="margin:0;font-size:12px;line-height:1.7">@foreach($notAttached as $p)<a href="{{ $p['url'] }}" style="color:#0b5cad">{{ $p['name'] }}</a><br>@endforeach</p>
+          @endif
         </td></tr>
       </table>
     </td></tr>

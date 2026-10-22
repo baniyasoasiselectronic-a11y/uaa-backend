@@ -13,6 +13,8 @@
 |   INSPECTION_ORACLE_URL base URL of the Oracle API (buildings / units / unit types)
 |   RENEWAL_STAFF         comma-separated names for "Renewed by" on Contract Renewals
 |   INSPECTION_NOTIFY_EMAILS  office e-mail addresses that get every report (comma-separated)
+|   INSPECTION_PHOTO_EMAILS  addresses that get every report with the photos attached
+|                           (default engineering@uaa.ae, web.dev@uaa.ae)
 |   INSPECTION_INSPECTOR_EMAILS  Name=address pairs, e.g. Jaseel=a@uaa.ae,Ranjan Kumar=b@uaa.ae
 */
 $list = fn (string $key, string $default) => array_values(array_filter(array_map('trim', explode(',', (string) env($key, $default)))));
@@ -23,6 +25,8 @@ return [
     'oracle_url' => rtrim((string) env('INSPECTION_ORACLE_URL', 'https://gazelle-pleasant-anchovy.ngrok-free.app'), '/'),
     'renewal_staff' => $list('RENEWAL_STAFF', 'Yousaf,Lamis'),
     'notify_emails' => $list('INSPECTION_NOTIFY_EMAILS', ''),
+    // these addresses get every report with the inspection photos attached (others get the PDF + photo links)
+    'photo_emails' => $list('INSPECTION_PHOTO_EMAILS', 'engineering@uaa.ae,web.dev@uaa.ae'),
     'inspector_emails' => (function () {
         $out = [];
         foreach (array_filter(array_map('trim', explode(',', (string) env('INSPECTION_INSPECTOR_EMAILS', '')))) as $pair) {
