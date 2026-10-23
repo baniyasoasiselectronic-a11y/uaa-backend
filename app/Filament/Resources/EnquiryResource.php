@@ -76,6 +76,8 @@ class EnquiryResource extends Resource
     {
         return $form
             ->schema([
+                // the customer's own details: read-only for an enquiries-only account (disabled fields are not saved)
+                Forms\Components\Group::make([
                 Forms\Components\Select::make('property_id')
                     ->relationship('property', 'title'),
                 Forms\Components\Select::make('unit_id')
@@ -98,6 +100,7 @@ class EnquiryResource extends Resource
                     ->required()
                     ->default('website'),
                 Forms\Components\TextInput::make('page')->label('Page / building')->maxLength(255),
+                ])->columns(2)->columnSpanFull()->disabled(fn () => (bool) auth()->user()?->isEnquiriesOnly()),
                 Forms\Components\Select::make('status')
                     ->options(['new' => 'New', 'contacted' => 'Contacted', 'closed' => 'Closed'])
                     ->required()

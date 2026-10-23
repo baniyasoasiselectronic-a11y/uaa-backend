@@ -34,6 +34,11 @@ trait RestrictedByRole
             return false;
         }
 
+        // enquiries_only is limited even while the general switch is off
+        if ($user->isEnquiriesOnly()) {
+            return in_array('enquiries_only', (array) config('staff_access.resources.'.$screen, []), true);
+        }
+
         if (! config('staff_access.limit_screens', false)) {
             return $user->hasAnyRole(User::STAFF_ROLES);
         }
@@ -41,6 +46,12 @@ trait RestrictedByRole
         $roles = (array) config('staff_access.resources.'.$screen, []);
 
         return $roles !== [] && $user->hasAnyRole($roles);
+    }
+
+    /** Adding, deleting and restoring records: never for an enquiries-only person. */
+    protected static function staffMayChange(): bool
+    {
+        return static::staffMayUse() && ! auth()->user()?->isEnquiriesOnly();
     }
 
     public static function canAccess(): bool
@@ -60,7 +71,7 @@ trait RestrictedByRole
 
     public static function canCreate(): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canEdit(Model $record): bool
@@ -70,41 +81,41 @@ trait RestrictedByRole
 
     public static function canDelete(Model $record): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canDeleteAny(): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canForceDelete(Model $record): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canForceDeleteAny(): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canRestore(Model $record): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canRestoreAny(): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canReorder(): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 
     public static function canReplicate(Model $record): bool
     {
-        return static::staffMayUse();
+        return static::staffMayChange();
     }
 }

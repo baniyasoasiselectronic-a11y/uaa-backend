@@ -15,6 +15,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class UaaStatsOverview extends BaseWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?int $sort = -5;
 
     protected function getColumns(): int

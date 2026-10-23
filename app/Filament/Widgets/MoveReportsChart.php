@@ -8,6 +8,8 @@ use Filament\Widgets\ChartWidget;
 /** Inspections submitted per week, split into Move In and Move Out (last 8 weeks). */
 class MoveReportsChart extends ChartWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?string $heading = 'Move in / out — last 8 weeks';
 
     protected static ?int $sort = 4;

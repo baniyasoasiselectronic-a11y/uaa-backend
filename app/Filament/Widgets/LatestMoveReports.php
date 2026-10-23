@@ -10,6 +10,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestMoveReports extends BaseWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?string $heading = 'Latest move in / out reports';
 
     protected static ?int $sort = 7;

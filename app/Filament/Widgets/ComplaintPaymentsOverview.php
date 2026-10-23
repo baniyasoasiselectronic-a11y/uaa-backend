@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Cache;
 /** Dashboard row: complaint payments received (app + website) and whether the old site is still sending records. */
 class ComplaintPaymentsOverview extends BaseWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?int $sort = -4;
 
     protected function getColumns(): int

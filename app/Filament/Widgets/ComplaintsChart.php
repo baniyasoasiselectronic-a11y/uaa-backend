@@ -8,6 +8,8 @@ use Filament\Widgets\ChartWidget;
 /** Where every complaint stands right now. */
 class ComplaintsChart extends ChartWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?string $heading = 'Complaints by status';
 
     protected static ?int $sort = 3;

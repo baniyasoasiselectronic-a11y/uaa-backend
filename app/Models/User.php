@@ -22,7 +22,19 @@ class User extends Authenticatable implements FilamentUser
     public const STAFF_ROLES = [
         'super_admin', 'property_manager', 'sales_agent',
         'maintenance', 'content_manager', 'hr',
+        'enquiries_only',
     ];
+
+    /**
+     * Someone who may open the Enquiries screen and nothing else: no other screen, no stats, no deleting,
+     * and only the status of an enquiry can be changed. A person who ALSO holds another staff role is treated
+     * by that role instead.
+     */
+    public function isEnquiriesOnly(): bool
+    {
+        return $this->hasRole('enquiries_only')
+            && ! $this->hasAnyRole(array_diff(self::STAFF_ROLES, ['enquiries_only']));
+    }
 
     protected $fillable = [
         'name',

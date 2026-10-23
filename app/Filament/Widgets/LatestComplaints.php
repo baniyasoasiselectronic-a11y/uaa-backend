@@ -10,6 +10,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestComplaints extends BaseWidget
 {
+    use \App\Filament\Concerns\HiddenFromEnquiriesOnly;
+
     protected static ?string $heading = 'Latest complaints';
 
     protected static ?int $sort = 6;

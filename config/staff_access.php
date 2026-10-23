@@ -9,6 +9,10 @@
  *   - A screen that is missing from this list is visible to super_admin only.
  *   - UserResource is never listed: accounts and roles are super_admin only in both modes.
  * Review this list with the team before switching limit_screens on; change it here, no other code is involved.
+ *
+ * The role enquiries_only is ALWAYS limited, whatever limit_screens says: it sees only the screens that list it
+ * (just Enquiries), cannot create or delete, and the dashboard shows only enquiry widgets. Create such a person with
+ * `php artisan uaa:enquiries-user her@email --name="Her Name"`.
  */
 return [
     'limit_screens' => env('STAFF_SCREEN_LIMITS', false),
@@ -27,7 +31,7 @@ return [
 
         // customers / sales
         'LeadResource'             => ['sales_agent', 'property_manager'],
-        'EnquiryResource'          => ['sales_agent', 'property_manager'],
+        'EnquiryResource'          => ['sales_agent', 'property_manager', 'enquiries_only'],
         'CallbackRequestResource'  => ['sales_agent', 'property_manager'],
         'ContactRequestResource'   => ['sales_agent', 'property_manager'],
         'ListWithUsRequestResource' => ['sales_agent', 'property_manager'],
