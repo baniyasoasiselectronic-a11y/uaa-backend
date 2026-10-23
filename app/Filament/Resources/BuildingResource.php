@@ -44,6 +44,14 @@ class BuildingResource extends Resource
                 Forms\Components\TextInput::make('floors_count')
                     ->numeric(),
                 Forms\Components\TextInput::make('year_built'),
+                Forms\Components\TextInput::make('total_apartments')
+                    ->label('Total apartments')
+                    ->numeric()
+                    ->helperText('Shown at the top of the floor plans section on the building page.'),
+                Forms\Components\TextInput::make('built_up_sqm')
+                    ->label('Built-up area (sq m)')
+                    ->numeric()
+                    ->helperText('Square feet are converted automatically on the site.'),
                 Forms\Components\Section::make('Location on Google Maps')
                     ->description('Shown as an exact pin on the building page. Open the building in Google Maps, press Share, copy the link and paste it below — the coordinates are filled in automatically when you save.')
                     ->columns(2)
@@ -156,6 +164,7 @@ class BuildingResource extends Resource
     {
         return [
             RelationManagers\ImagesRelationManager::class,
+            RelationManagers\FloorsRelationManager::class,
         ];
     }
 

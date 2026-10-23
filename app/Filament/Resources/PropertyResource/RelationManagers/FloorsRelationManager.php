@@ -129,7 +129,8 @@ class FloorsRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->modalDescription('Copies this floor and all its apartment types (they share the same plan images). Handy for identical floors.')
                     ->action(function (PropertyFloor $record) {
-                        $copy = $record->replicate();
+                        // the table adds a units_count column to the row; it is not a real column, so it must not be copied
+                        $copy = $record->replicate(['units_count']);
                         $copy->label = $record->label.' (copy)';
                         $copy->sort_order = (int) $record->property->floors()->max('sort_order') + 1;
                         $copy->save();
