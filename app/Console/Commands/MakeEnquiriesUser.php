@@ -13,6 +13,7 @@ use Spatie\Permission\Models\Role;
  * (role enquiries_only — see config/staff_access.php and User::isEnquiriesOnly()).
  *
  *   php artisan uaa:enquiries-user her@uaa.ae --name="Her Name"     create (or add the role to an existing account)
+ *   php artisan uaa:enquiries-user her@uaa.ae --reset-password      she forgot / never got the password: set a new one (shown once)
  *   php artisan uaa:enquiries-user her@uaa.ae --remove              take the role away again (she can no longer sign in)
  */
 class MakeEnquiriesUser extends Command
@@ -20,6 +21,7 @@ class MakeEnquiriesUser extends Command
     protected $signature = 'uaa:enquiries-user {email : The salesperson\'s e-mail address (her login)}
                             {--name= : Her name, for a new account}
                             {--password= : A password for a new account (default: a random one is generated and shown once)}
+                            {--reset-password : For an existing enquiries-only account: set a new password (random, shown once) and re-apply the role}
                             {--remove : Remove the enquiries-only role instead}';
 
     protected $description = 'Create a salesperson login that can only see and answer Enquiries';
@@ -60,6 +62,11 @@ class MakeEnquiriesUser extends Command
             $this->error("{$email} already has another staff role, so this role would not limit them. Nothing changed.");
 
             return self::FAILURE;
+        } elseif ($this->option('reset-password')) {
+            // only for accounts that are enquiries-only (checked above), so this can never reset an admin's password
+            $password = (string) ($this->option('password') ?: Str::password(14, symbols: false));
+            $user->forceFill(['password' => $password])->save();
+            $this->info("Account {$email} already exists; a NEW password was set and the role is (re)applied.");
         } else {
             $this->info("Account {$email} already exists; only the role is added (password unchanged).");
         }
