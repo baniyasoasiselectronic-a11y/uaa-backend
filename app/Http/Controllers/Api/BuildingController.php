@@ -33,6 +33,11 @@ class BuildingController extends Controller
             ->withAvg('units', 'price')
             ->firstOrFail();
 
+        // floor plans need the 2026_10_23 migration; until it has run the page simply has no floor section
+        if (\Illuminate\Support\Facades\Schema::hasColumn('property_floors', 'building_id')) {
+            $building->load('planFloors.units');
+        }
+
         return new BuildingResource($building);
     }
 }

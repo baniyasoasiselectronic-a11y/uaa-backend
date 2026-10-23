@@ -48,6 +48,12 @@ class Building extends Model
         return $this->hasMany(Floor::class);
     }
 
+    /** The floor-plan explorer data (floors with their apartment types and drawings), shown on the building page. */
+    public function planFloors(): HasMany
+    {
+        return $this->hasMany(PropertyFloor::class)->orderBy('sort_order')->orderBy('id');
+    }
+
     public function units(): HasMany
     {
         return $this->hasMany(Unit::class);

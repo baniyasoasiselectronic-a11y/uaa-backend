@@ -29,6 +29,31 @@ class BuildingResource extends JsonResource
             'longitude' => $this->longitude !== null ? (float) $this->longitude : null,
             'map_url' => $this->map_url,
             'images' => $this->imageUrls(),
+            'total_apartments' => $this->total_apartments,
+            'built_up_sqm' => $this->built_up_sqm !== null ? (float) $this->built_up_sqm : null,
+            // floor-plan explorer data; only sent on the single-building endpoint (same shape as a project's floors)
+            'floors' => $this->whenLoaded('planFloors', fn () => $this->planFloors->map(fn ($f) => [
+                'id' => $f->id,
+                'label' => $f->label,
+                'plan_url' => $f->plan_image ? $this->url($f->plan_image) : null,
+                'total_apartments' => $f->total_apartments ?? $f->units->count(),
+                'total_area_sqm' => $f->total_area_sqm !== null
+                    ? (float) $f->total_area_sqm
+                    : round($f->units->sum(fn ($u) => (float) $u->total_sqm), 2),
+                'notes' => $f->notes,
+                'units' => $f->units->map(fn ($u) => [
+                    'id' => $u->id,
+                    'type' => $u->unit_type,
+                    'bedrooms' => $u->bedrooms,
+                    'category' => \App\Models\PropertyFloorUnit::categoryLabel($u->bedrooms),
+                    'suite_sqm' => $u->suite_sqm !== null ? (float) $u->suite_sqm : null,
+                    'outdoor_label' => $u->outdoor_label,
+                    'outdoor_sqm' => $u->outdoor_sqm !== null ? (float) $u->outdoor_sqm : null,
+                    'total_sqm' => $u->total_sqm,
+                    'url' => $u->image ? $this->url($u->image) : null,
+                    'notes' => $u->notes,
+                ])->values(),
+            ])->values()),
             'community' => $this->whenLoaded('community', fn () => $this->community ? [
                 'id' => $this->community->id,
                 'name' => $this->community->name,
